@@ -1,0 +1,1 @@
+"""InterestFinder backend application package."""
