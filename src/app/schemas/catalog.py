@@ -3,6 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+
 class Category(str, Enum):
 
     movies = "movies"
@@ -10,12 +11,14 @@ class Category(str, Enum):
     music = "music"
     attractions = "attractions"
 
+
 class Provider(str, Enum):
 
     tmdb = "tmdb"
     google_books = "google_books"
     musicbrainz = "musicbrainz"
     opentripmap = "opentripmap"
+
 
 class CatalogItemOut(BaseModel):
     id: int | None = None
@@ -32,17 +35,18 @@ class CatalogItemOut(BaseModel):
     community_review_count: int = 0
     details: dict[str, Any] | None = None
 
+
 class PaginationMeta(BaseModel):
     page: int
     page_size: int
     total: int
     has_next: bool
 
+
 class PaginatedItems(BaseModel):
-    
     data: list[CatalogItemOut]
     meta: PaginationMeta
-    request_id: str 
+    request_id: str
 
 
 class ItemResponse(BaseModel):
