@@ -71,9 +71,14 @@ async def get_item(
     category: Category,
     external_id: str = Path(..., min_length=1, max_length=100),
     service: CatalogService = Depends(get_catalog_service),
-    repository: CatalogRepository | None = Depends(get_catalog_repository),
+    repository: CatalogRepository = Depends(get_catalog_repository),
 ) -> ItemResponse:
-    """Return one item's details from its provider, using the provider's own id."""
+    """Return one item's details from its provider, using the provider's own id.
+
+    The item and its category details are saved to the database, so the
+    response includes the InterestFinder `id` that saved items and reviews use.
+    If the provider is unavailable, the saved copy is returned when one exists.
+    """
 
     item = await service.get_details(category, external_id, store=repository)
     return ItemResponse(data=item, request_id=request.state.request_id)
