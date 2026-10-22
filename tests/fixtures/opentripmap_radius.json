@@ -1,0 +1,6 @@
+[
+  {"xid": "W123456", "name": "Balboa Park", "dist": 1200.5, "rate": 7, "kinds": "gardens_and_parks,interesting_places", "point": {"lon": -117.15, "lat": 32.73}},
+  {"xid": "N555", "name": "", "dist": 50.0, "rate": 3, "kinds": "other", "point": {"lon": -117.16, "lat": 32.71}},
+  {"xid": "R777", "name": "USS Midway Museum", "dist": 900.0, "rate": 7, "kinds": "museums,interesting_places", "point": {"lon": -117.17, "lat": 32.71}},
+  {"xid": "W123456", "name": "Balboa Park", "dist": 1200.5, "rate": 7, "kinds": "gardens_and_parks", "point": {"lon": -117.15, "lat": 32.73}}
+]

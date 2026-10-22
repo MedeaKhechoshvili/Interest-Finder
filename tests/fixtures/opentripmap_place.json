@@ -1,0 +1,11 @@
+{
+  "xid": "W123456",
+  "name": "Balboa Park",
+  "address": {"city": "San Diego", "state": "California", "country": "United States of America"},
+  "rate": "3h",
+  "wikipedia": "https://en.wikipedia.org/wiki/Balboa_Park",
+  "kinds": "gardens_and_parks,cultural,interesting_places",
+  "preview": {"source": "https://upload.wikimedia.org/balboa-park.jpg", "height": 300, "width": 400},
+  "wikipedia_extracts": {"title": "en:Balboa Park", "text": "Balboa Park is a 1,200-acre historic urban cultural park in San Diego."},
+  "point": {"lon": -117.15, "lat": 32.73}
+}

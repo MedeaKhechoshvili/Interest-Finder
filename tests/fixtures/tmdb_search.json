@@ -1,0 +1,10 @@
+{
+  "page": 1,
+  "results": [
+    {"id": 268, "title": "Batman", "overview": "Batman must face the Joker.", "poster_path": "/cij4dd21v2Rk2YtUQbV5kW69WB2.jpg", "release_date": "1989-06-21", "vote_average": 7.2, "vote_count": 8000},
+    {"id": 272, "title": "Batman Begins", "overview": "", "poster_path": null, "release_date": "", "vote_average": 7.7, "vote_count": 20000},
+    {"id": 999999, "overview": "This result has no title and should be skipped."}
+  ],
+  "total_pages": 1,
+  "total_results": 3
+}
