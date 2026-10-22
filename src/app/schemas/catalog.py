@@ -1,3 +1,10 @@
+"""Normalized catalog schemas shared by every provider.
+
+Every provider response is converted into these models before it leaves the
+backend, so the frontend never sees TMDB, Google Books, MusicBrainz, or
+OpenTripMap response formats.
+"""
+
 from enum import Enum
 from typing import Any
 
@@ -5,6 +12,7 @@ from pydantic import BaseModel
 
 
 class Category(str, Enum):
+    """The four catalog categories InterestFinder supports."""
 
     movies = "movies"
     books = "books"
@@ -13,6 +21,7 @@ class Category(str, Enum):
 
 
 class Provider(str, Enum):
+    """The external provider behind each category."""
 
     tmdb = "tmdb"
     google_books = "google_books"
@@ -21,6 +30,8 @@ class Provider(str, Enum):
 
 
 class CatalogItemOut(BaseModel):
+    """One catalog item in the common InterestFinder format."""
+
     id: int | None = None
     category: Category
     provider: Provider
@@ -37,6 +48,8 @@ class CatalogItemOut(BaseModel):
 
 
 class PaginationMeta(BaseModel):
+    """Pagination information for collection responses."""
+
     page: int
     page_size: int
     total: int
@@ -44,12 +57,36 @@ class PaginationMeta(BaseModel):
 
 
 class PaginatedItems(BaseModel):
+    """Response body for GET /api/v1/items."""
+
     data: list[CatalogItemOut]
     meta: PaginationMeta
     request_id: str
 
 
 class ItemResponse(BaseModel):
+    """Response body for GET /api/v1/items/{category}/{external_id}."""
+
     data: CatalogItemOut
     request_id: str
 
+
+class HomeSection(BaseModel):
+    """One row of featured items on the home page."""
+
+    category: Category
+    title: str
+    items: list[CatalogItemOut]
+
+
+class HomeData(BaseModel):
+    """All featured sections shown on the home page."""
+
+    sections: list[HomeSection]
+
+
+class HomeResponse(BaseModel):
+    """Response body for GET /api/v1/home."""
+
+    data: HomeData
+    request_id: str
