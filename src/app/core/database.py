@@ -1,11 +1,33 @@
 """SQLAlchemy engine, declarative base, and request-scoped sessions."""
 
+import sqlite3
 from collections.abc import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.settings import get_settings
+
+
+@event.listens_for(Engine, "connect")
+def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    """Enable foreign-key checks for every new SQLite connection."""
+    if not isinstance(dbapi_connection, sqlite3.Connection):
+        return
+
+    has_autocommit = hasattr(dbapi_connection, "autocommit")
+    if has_autocommit:
+        previous_autocommit = dbapi_connection.autocommit
+        dbapi_connection.autocommit = True
+
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA foreign_keys=ON")
+    finally:
+        cursor.close()
+        if has_autocommit:
+            dbapi_connection.autocommit = previous_autocommit
 
 
 class Base(DeclarativeBase):
