@@ -5,7 +5,7 @@ from enum import Enum
 from sqlalchemy import DateTime, String, Text, UniqueConstraint, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from app.core.database import Base
 
 class Category(str, Enum):
     MOVIES = "movies"
@@ -79,20 +79,20 @@ class CatalogItem(Base):
 
     cached_at: Mapped[datetime] = mapped_column(
         DateTime(timezone = True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable = False
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
-        onupdate = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
+        onupdate = lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
