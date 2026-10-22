@@ -25,7 +25,9 @@ content, item details, and what happens when a provider fails.
 
 Provider notes:
 
-- **TMDB** search uses `/search/movie`; browsing without search text uses
+- **TMDB** search uses `/search/movie`; item details use `/movie/{id}` with
+  `append_to_response=credits,release_dates` to get the director, cast, and US
+  certification in the same request; browsing without search text uses
   `/discover/movie` sorted by popularity; the home page uses
   `/trending/movie/week`. TMDB returns fixed 20-item pages and stops at page 500.
 - **Google Books** search uses `/volumes` with `startIndex` and `maxResults`
@@ -76,7 +78,7 @@ Every provider response is converted into `CatalogItemOut`
 | `year_or_date` | `release_date` | `publishedDate` (may be a year only) | `first-release-date` | not provided |
 | `source_rating` | `vote_average` (0-10) | `averageRating` (1-5) | `rating.value` (0-5, details only) | not provided* |
 | `source_rating_count` | `vote_count` | `ratingsCount` | `rating.votes-count` | not provided |
-| `details` | runtime_minutes, genres, tagline, original_language | authors, subtitle, publisher, page_count, subjects, isbn_13 | artist, release_type, tags | kinds, city, country, latitude, longitude, wikipedia_url |
+| `details` | runtime_minutes, language, certification (US), genres, director, cast | authors, publisher, isbn (13 preferred, else 10), page_count, language, published_date, categories | artist, release_type, release_date, genres (curated genres, else top tags) | city, address, latitude, longitude, attraction_type |
 
 \* OpenTripMap's `rate` is a popularity score, not a user rating, so it is not
 reported as `source_rating`.
@@ -94,20 +96,31 @@ Rules applied to every provider:
 
 ## Fields stored locally
 
-When a user opens an item (`GET /items/{category}/{external_id}`), the item is
-saved to the shared `CatalogItem` table (`src/app/repositories/catalog.py`).
-This gives it an InterestFinder `id`, which saved items and reviews use as
-`catalog_item_id`.
+When a user opens an item (`GET /items/{category}/{external_id}`), it is saved
+to the database (`src/app/repositories/catalog.py`, using the models in
+`src/app/models/`). This gives it an InterestFinder `id`, which saved items and
+reviews use to refer to it.
 
-Stored: `category`, `provider`, `external_id`, `title`, `description`,
-`image_url`, `year_or_date`, `source_rating`, `source_rating_count`, and
-`updated_at`. The provider/category/external_id combination is unique, so
-opening an item again updates the same row. Category `details` are currently
-returned from the provider but not stored.
+| Table | What is stored |
+| --- | --- |
+| `CatalogItem` | `category`, `provider`, `external_id`, `title`, `description`, `image_url`, `year_or_date`, `source_rating`, `source_rating_count`, `cached_at`, `created_at`, `updated_at` |
+| `MovieDetails` | `runtime_minutes`, `language`, `certification`, `genres`, `director`, `cast` |
+| `BookDetails` | `authors`, `publisher`, `isbn`, `page_count`, `language`, `published_date`, `categories` |
+| `MusicDetails` | `artist`, `release_type`, `release_date`, `genres` (`track_count` and `language` are not provided by the release-group lookup) |
+| `AttractionDetails` | `city`, `address`, `latitude`, `longitude`, `attraction_type` (OpenTripMap has no `price_level` or `indoor_outdoor` data) |
 
-The stored copy doubles as a small cache: if the provider is down (a 502
-error) and the item was opened before, the stored copy is returned instead of
-an error. Search results are not stored.
+The keys in an item's `details` object are the same as the column names of its
+details table, so a stored item and a freshly fetched item look the same.
+Each details row is linked to its item by `catalog_item_id`.
+
+Opening an item again updates the same `CatalogItem` row and details row
+(provider and external id are unique together), refreshing `cached_at`. Every
+details column is rewritten, so a value the provider no longer sends is
+cleared. Search results are not stored; only items that are opened.
+
+The stored copy doubles as a cache: if the provider is down (a 502 error) and
+the item was opened before, the stored copy, including its details, is
+returned instead of an error.
 
 ## Search and filters
 
@@ -226,7 +239,7 @@ src/app/
   services/providers/google_books.py
   services/providers/musicbrainz.py
   services/providers/opentripmap.py
-  repositories/catalog.py         Stores opened items in CatalogItem
+  repositories/catalog.py         Stores opened items in CatalogItem and the details tables
   routes/catalog.py               GET /items and GET /items/{category}/{external_id}
   routes/home.py                  GET /home
 scripts/try_providers.py          Manual check against the real APIs
@@ -246,6 +259,8 @@ providers, so they never call real APIs.
 | `test_provider_opentripmap.py` | City lookup, autosuggest vs radius, unnamed places, unknown cities |
 | `test_catalog_service.py` | Category filtering, all-category search and pagination (every result exactly once for many page sizes and uneven categories), partial failures, details storage and fallback, home caching |
 | `test_catalog_routes.py` | Response format, validation errors, invalid categories, 404/502 responses, route conflicts |
+| `test_catalog_repository.py` | Saving items and every category's details to a real (in-memory) database, updating instead of duplicating, the stored-copy fallback through the API |
+| `test_catalog_app.py` | The catalog endpoints are registered in the real application |
 
 Run them with:
 
