@@ -31,3 +31,8 @@ where = ["src"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
