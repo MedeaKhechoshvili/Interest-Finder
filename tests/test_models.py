@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from src.app.models import (
+from app.models import (
     Base,
     User,
     CatalogItem,
