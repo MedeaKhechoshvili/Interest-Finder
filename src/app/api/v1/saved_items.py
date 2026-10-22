@@ -3,12 +3,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
-from app.models.database import SessionDep
 from app.models.catalog_item import CatalogItem
+from app.models.database import SessionDep
 from app.models.saved_item import SavedItem, Status
 from app.schemas.saved_item import (
     SavedItemCreate,
     SavedItemRead,
+    SavedItemStatus,
     SavedItemUpdate,
 )
 
@@ -19,7 +20,11 @@ router = APIRouter(
 
 
 @router.post("/", response_model=SavedItemRead, status_code=201)
-def save_item(data: SavedItemCreate, user_id: int, session: SessionDep):
+def save_item(
+    data: SavedItemCreate,
+    user_id: int,
+    session: SessionDep,
+):
     catalog_item = session.get(CatalogItem, data.item_id)
 
     if catalog_item is None:
@@ -55,17 +60,29 @@ def save_item(data: SavedItemCreate, user_id: int, session: SessionDep):
 
 
 @router.get("/", response_model=list[SavedItemRead])
-def get_saved_items(user_id: int, session: SessionDep):
-    saved_items = session.scalars(
-        select(SavedItem)
-        .where(SavedItem.user_id == user_id)
-        .order_by(SavedItem.saved_at.desc())
+def get_saved_items(
+    user_id: int,
+    session: SessionDep,
+    status: SavedItemStatus | None = None,
+):
+    query = select(SavedItem).where(
+        SavedItem.user_id == user_id,
+    )
+
+    if status is not None:
+        query = query.where(
+            SavedItem.status == Status(status.value),
+        )
+
+    return session.scalars(
+        query.order_by(SavedItem.saved_at.desc())
     ).all()
 
-    return saved_items
 
-
-@router.patch("/{saved_item_id}", response_model=SavedItemRead)
+@router.patch(
+    "/{saved_item_id}",
+    response_model=SavedItemRead,
+)
 def update_saved_item(
     saved_item_id: int,
     data: SavedItemUpdate,
@@ -99,7 +116,10 @@ def update_saved_item(
     return saved_item
 
 
-@router.delete("/{saved_item_id}", status_code=204)
+@router.delete(
+    "/{saved_item_id}",
+    status_code=204,
+)
 def delete_saved_item(
     saved_item_id: int,
     user_id: int,
