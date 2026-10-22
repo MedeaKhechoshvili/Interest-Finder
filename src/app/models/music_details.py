@@ -1,7 +1,7 @@
 from sqlalchemy import String, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from app.core.database import Base
 
 class MusicDetails(Base):
     __tablename__ = "MusicDetails"

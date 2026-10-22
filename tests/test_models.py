@@ -5,8 +5,9 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from src.app.models import (
-    Base,
+from app.core.database import Base
+
+from app.models import (
     User,
     CatalogItem,
     SavedItem,
@@ -26,6 +27,7 @@ def session():
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
+    print("Registered tables:", list(Base.metadata.tables.keys()))
     Base.metadata.create_all(engine)
 
     with Session(engine) as db:
@@ -97,7 +99,7 @@ def test_tables_are_created(session):
         "BookDetails",
         "MusicDetails",
         "AttractionDetails",
-        "SavedItems",
+        "SavedItem",
         "Review",
     }.issubset(tables)
 

@@ -5,7 +5,7 @@ from enum import Enum
 from sqlalchemy import DateTime, String, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from app.core.database import Base
 
 class Status(str, Enum):
     PLANNED = "planned"
