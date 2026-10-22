@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
@@ -43,4 +43,12 @@ class User(Base):
 
     updated_at: Mapped[datetime] = mapped_column(
         nullable = False
+    )
+
+    review: Mapped[list["Review"]] = relationship(
+        back_populates = "user"
+    )
+
+    saved_item: Mapped[list["SavedItem"]] = relationship(
+        back_populates = "user"
     )

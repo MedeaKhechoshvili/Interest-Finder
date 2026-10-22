@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 
 from sqlalchemy import DateTime, String, Text, UniqueConstraint, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
@@ -24,8 +24,8 @@ class CatalogItem(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "provider",
-            "external_id"
+            "user_id",
+            "item_id"
         )
     )
 
@@ -94,5 +94,33 @@ class CatalogItem(Base):
         default = datetime.now(timezone.utc),
         onupdate = datetime.now(timezone.utc),
         nullable=False,
+    )
+
+    review: Mapped[list["Review"]] = relationship(
+        back_populates = "catalog_item"
+    )
+    
+    saved_item: Mapped[list["SavedItem"]] = relationship(
+        back_populates = "catalog_item"
+    )
+
+    movie_details: Mapped["MovieDetails | None"] = relationship(
+        back_populates="catalog_item",
+        uselist=False
+    )
+    
+    book_details: Mapped["BookDetails | None"] = relationship(
+        back_populates="catalog_item",
+        uselist=False
+    )
+
+    music_details: Mapped["MusicDetails | None"] = relationship(
+        back_populates="catalog_item",
+        uselist=False
+    )
+
+    attraction_details: Mapped["AttractionDetails | None"] = relationship(
+        back_populates="catalog_item",
+        uselist=False
     )
 
