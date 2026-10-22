@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
 class AttractionDetails(Base):
     __tablename__ = "AttractionDetails"
@@ -18,11 +18,11 @@ class AttractionDetails(Base):
         nullable = False
     )
 
-    city: Mapped[String | None] = mapped_column(
+    city: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
-    address: Mapped[String | None] = mapped_column(
+    address: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -34,7 +34,7 @@ class AttractionDetails(Base):
         nullable = True
     )
 
-    attraction_type: Mapped[String | None] = mapped_column(
+    attraction_type: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -42,10 +42,10 @@ class AttractionDetails(Base):
         nullable = True
     )
 
-    indoor_outdoor: Mapped[String | None] = mapped_column(
+    indoor_outdoor: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
     catalog_item: Mapped["CatalogItem"] = relationship(
-        back_populates="book_details"
+        back_populates="attraction_details"
     )

@@ -1,7 +1,7 @@
 from sqlalchemy import String, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
 class MusicDetails(Base):
     __tablename__ = "MusicDetails"
@@ -16,15 +16,15 @@ class MusicDetails(Base):
         nullable = False
     )
 
-    artist: Mapped[String | None] = mapped_column(
+    artist: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
-    release_type: Mapped[String | None] = mapped_column(
+    release_type: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
-    release_date: Mapped[String | None] = mapped_column(
+    release_date: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -32,7 +32,7 @@ class MusicDetails(Base):
         nullable = True
     )
 
-    language: Mapped[String | None] = mapped_column(
+    language: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -42,6 +42,6 @@ class MusicDetails(Base):
     )
 
     catalog_item: Mapped["CatalogItem"] = relationship(
-            back_populates="book_details"
+            back_populates="music_details"
         )
 

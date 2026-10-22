@@ -1,7 +1,7 @@
 from sqlalchemy import String, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
 class MovieDetails(Base):
     __tablename__ = "MovieDetails"
@@ -19,11 +19,11 @@ class MovieDetails(Base):
         nullable = True
     )
 
-    language: Mapped[String | None] = mapped_column(
+    language: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
-    certification: Mapped[String | None] = mapped_column(
+    certification: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -32,7 +32,7 @@ class MovieDetails(Base):
         nullable = True
     )
 
-    director: Mapped[String | None] = mapped_column(
+    director: Mapped[str | None] = mapped_column(
         nullable = True
     )
 

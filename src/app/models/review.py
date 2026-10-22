@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, Text, UniqueConstraint, ForeignKey, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
 class Review(Base):
     __tablename__ = "Review"
@@ -22,11 +22,11 @@ class Review(Base):
 
     id: Mapped[int] = mapped_column(
         primary_key = True,
-        auto_increment = True
+        autoincrement = True
     )
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("Users.id"),
+        ForeignKey("User.id"),
         nullable=False,
     )
 
@@ -56,9 +56,9 @@ class Review(Base):
     )
 
     user: Mapped["User"] = relationship(
-        back_populates="saved_item"
+        back_populates="review"
     )
     
     catalog_item: Mapped["CatalogItem"] = relationship(
-        back_populates="saved_item"
+        back_populates="review"
     )

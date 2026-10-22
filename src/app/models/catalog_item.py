@@ -5,15 +5,15 @@ from enum import Enum
 from sqlalchemy import DateTime, String, Text, UniqueConstraint, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
-class Category(String, Enum):
+class Category(str, Enum):
     MOVIES = "movies"
     BOOKS = "books"
     MUSIC = "music"
     ATTRACTIONS = "attractions"
 
-class Provider(String, Enum):
+class Provider(str, Enum):
     TMDB = "tmdb"
     GOOGLE_BOOKS = "google_books"
     MUSICBRAINZ = "musicbrainz"
@@ -24,14 +24,14 @@ class CatalogItem(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "user_id",
-            "item_id"
-        )
+            "provider",
+            "external_id",
+        ),
     )
 
     id: Mapped[int] = mapped_column(
         primary_key = True,
-        auto_increment = True
+        autoincrement = True
     )
 
     category: Mapped[Category] = mapped_column(
@@ -44,24 +44,24 @@ class CatalogItem(Base):
         nullable = False
     )
 
-    external_id: Mapped[String] = mapped_column(
+    external_id: Mapped[str] = mapped_column(
         nullable = False
     )
 
-    title: Mapped[String] = mapped_column(
+    title: Mapped[str] = mapped_column(
         nullable = False
     )
 
-    description: Mapped[String | None] = mapped_column(
+    description: Mapped[str | None] = mapped_column(
         Text,
         nullable = True
     )
 
-    image_url: Mapped[String | None] = mapped_column(
+    image_url: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
-    year_or_date: Mapped[String | None] = mapped_column(
+    year_or_date: Mapped[str | None] = mapped_column(
         nullable = True
     )
 
@@ -73,7 +73,7 @@ class CatalogItem(Base):
         nullable = True
     )
 
-    source_url: Mapped[String | None] = mapped_column(
+    source_url: Mapped[str | None] = mapped_column(
         nullable = True
     )
 

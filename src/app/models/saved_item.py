@@ -5,9 +5,9 @@ from enum import Enum
 from sqlalchemy import DateTime, String, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
-class Status(String, Enum):
+class Status(str, Enum):
     PLANNED = "planned"
     COMPLETED = "completed"
 
@@ -16,18 +16,18 @@ class SavedItem(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "provider",
-            "external_id"
-        )
+            "user_id",
+            "item_id",
+        ),
     )
 
     id: Mapped[int] = mapped_column(
         primary_key = True,
-        auto_increment = True
+        autoincrement = True
     )
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("Users.id"),
+        ForeignKey("User.id"),
         nullable=False,
     )
     item_id: Mapped[int] = mapped_column(

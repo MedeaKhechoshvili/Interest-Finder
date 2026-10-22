@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from .database import Base
 
 class User(Base):
     __tablename__ = "User"
@@ -13,17 +13,16 @@ class User(Base):
         autoincrement = True
     )
 
-    full_name: Mapped[String] = mapped_column(
+    full_name: Mapped[str] = mapped_column(
         nullable = False
     )
 
-    email: Mapped[String] = mapped_column(
+    email: Mapped[str] = mapped_column(
         nullable = False,
         unique = True,
-        lowercase = True
     )
 
-    password_hash: Mapped[String] = mapped_column(
+    password_hash: Mapped[str] = mapped_column(
         nullable = False,
     )
 
