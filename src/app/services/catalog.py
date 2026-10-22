@@ -7,7 +7,6 @@ decides what happens when a provider fails.
 
 import asyncio
 import logging
-import math
 import time
 from collections.abc import Callable
 from functools import lru_cache
@@ -24,7 +23,7 @@ from app.schemas.catalog import (
     PaginationMeta,
     Provider,
 )
-from app.services.providers.base import CatalogProvider, ProviderPage
+from app.services.providers.base import CatalogProvider
 from app.services.providers.config import get_provider_settings
 from app.services.providers.google_books import GoogleBooksProvider
 from app.services.providers.musicbrainz import MusicBrainzProvider
@@ -52,15 +51,44 @@ class CatalogItemStore(Protocol):
         ...
 
 
-def interleave(pages: list[list[CatalogItemOut]]) -> list[CatalogItemOut]:
-    """Mix results round-robin: movie, book, album, place, movie, book, ..."""
+def counts_before(position: int, totals: list[int]) -> list[int]:
+    """How many items each provider contributes to the first `position` results.
 
-    mixed: list[CatalogItemOut] = []
-    for position in range(max((len(p) for p in pages), default=0)):
-        for page in pages:
-            if position < len(page):
-                mixed.append(page[position])
-    return mixed
+    Results from all categories are mixed round-robin (movie, book, album,
+    place, movie, ...). When a provider runs out, it is skipped and the others
+    keep taking turns. Example with totals [3, 1] (3 movies, 1 book):
+    the order is movie, book, movie, movie, so counts_before(3) == [2, 1].
+    """
+
+    counts = [0] * len(totals)
+    remaining = position
+    active = [i for i, total in enumerate(totals) if total > 0]
+    while remaining > 0 and active:
+        smallest_left = min(totals[i] - counts[i] for i in active)
+        full_rounds = min(smallest_left, remaining // len(active))
+        if full_rounds > 0:
+            # Every active provider takes `full_rounds` turns.
+            for i in active:
+                counts[i] += full_rounds
+            remaining -= full_rounds * len(active)
+        else:
+            # Fewer results left than providers: a partial round, in order.
+            for i in active[:remaining]:
+                counts[i] += 1
+            remaining = 0
+        active = [i for i in active if counts[i] < totals[i]]
+    return counts
+
+
+def even_split(start: int, end: int, provider_count: int) -> list[tuple[int, int]]:
+    """Guess each provider's (offset, count) for results start..end, assuming none run out."""
+
+    def taken(position: int, index: int) -> int:
+        return max(0, -(-(position - index) // provider_count))  # ceil, never negative
+
+    return [
+        (taken(start, i), taken(end, i) - taken(start, i)) for i in range(provider_count)
+    ]
 
 
 class CatalogService:
@@ -113,45 +141,93 @@ class CatalogService:
     async def _search_all(
         self, query: str | None, page: int, page_size: int, filters: dict[str, Any]
     ) -> tuple[list[CatalogItemOut], int]:
-        """Ask every provider for its share of the page at the same time.
+        """Search every category and return one page of the mixed results.
 
-        With page_size=20 and four providers, each provider returns 5 items for
-        the same page number, and the results are interleaved. If some providers
-        fail, results from the others are still returned. Only when every
-        provider fails is an error raised.
+        The combined results are one long list mixed round-robin (movie, book,
+        album, place, movie, ...), skipping providers that run out. Page N is
+        simply positions start..end of that list, so every result appears
+        exactly once across the pages, even with page_size=1 or when one
+        category has far fewer results than the others.
+
+        Step 1: ask every provider at once for the range it would cover if no
+        provider ran out (always at least 1 item, so every total is known).
+        Step 2: with the real totals, work out the exact range each provider
+        owns on this page, and fetch again only where step 1 did not cover it.
+
+        If some providers fail, results from the others are still returned.
+        Only when every provider fails is an error raised.
         """
 
         categories = list(self.providers)
-        per_provider = math.ceil(page_size / len(categories))
-        results = await asyncio.gather(
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        guesses = even_split(start, end, len(categories))
+        first_results = await asyncio.gather(
             *(
-                self.providers[c].search(query, page, per_provider, filters)
-                for c in categories
+                self.providers[c].fetch_range(query, offset, max(count, 1), filters)
+                for c, (offset, count) in zip(categories, guesses)
             ),
             return_exceptions=True,
         )
 
-        pages: list[list[CatalogItemOut]] = []
-        total = 0
+        totals: list[int] = []
+        fetched: list[tuple[int, list[CatalogItemOut]]] = []
         errors: list[AppError] = []
-        for category, result in zip(categories, results):
+        for category, (offset, _), result in zip(categories, guesses, first_results):
             if isinstance(result, AppError):
-                logger.warning(
-                    "provider failed during all-category search category=%s code=%s",
-                    category.value,
-                    result.code,
-                )
+                self._log_search_failure(category, result)
                 errors.append(result)
+                totals.append(0)  # Treat a failed provider as having no results.
+                fetched.append((offset, []))
                 continue
             if isinstance(result, BaseException):
                 raise result  # A real bug, not a provider problem.
-            assert isinstance(result, ProviderPage)
-            pages.append(result.items[:per_provider])
-            total += result.total
+            totals.append(result.total)
+            fetched.append((offset, result.items))
 
-        if errors and not pages:
+        if len(errors) == len(categories):
             raise errors[0]
-        return interleave(pages)[:page_size], total
+
+        before_start = counts_before(start, totals)
+        before_end = counts_before(end, totals)
+
+        async def items_for(index: int) -> list[CatalogItemOut]:
+            needed_offset = before_start[index]
+            needed_count = before_end[index] - needed_offset
+            if needed_count <= 0:
+                return []
+            have_offset, have_items = fetched[index]
+            skip = needed_offset - have_offset
+            if skip >= 0 and skip + needed_count <= len(have_items):
+                return have_items[skip : skip + needed_count]
+            provider = self.providers[categories[index]]
+            try:
+                result = await provider.fetch_range(query, needed_offset, needed_count, filters)
+            except AppError as error:
+                self._log_search_failure(categories[index], error)
+                return []
+            return result.items[:needed_count]
+
+        per_provider = await asyncio.gather(*(items_for(i) for i in range(len(categories))))
+
+        # Sorting by (position within its provider, provider order) recreates
+        # the round-robin order: every provider's 1st item, then every 2nd, ...
+        keyed = [
+            ((before_start[i] + position, i), item)
+            for i, items in enumerate(per_provider)
+            for position, item in enumerate(items)
+        ]
+        keyed.sort(key=lambda pair: pair[0])
+        return [item for _, item in keyed], sum(totals)
+
+    @staticmethod
+    def _log_search_failure(category: Category, error: AppError) -> None:
+        logger.warning(
+            "provider failed during all-category search category=%s code=%s",
+            category.value,
+            error.code,
+        )
 
     async def get_details(
         self,

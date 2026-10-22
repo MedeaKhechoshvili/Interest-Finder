@@ -78,9 +78,23 @@ class FakeStore:
         return stored
 
 
-def make_service(errors: dict[Category, AppError] | None = None, total: int = 100, **kwargs) -> CatalogService:
+def make_service(
+    errors: dict[Category, AppError] | None = None,
+    total: int = 100,
+    totals: dict[Category, int] | None = None,
+    **kwargs,
+) -> CatalogService:
+    """A CatalogService whose providers are fakes.
+
+    `total` gives every category the same number of results; `totals` sets
+    different numbers per category.
+    """
+
     errors = errors or {}
-    providers = {c: FakeProvider(c, total=total, error=errors.get(c)) for c in Category}
+    totals = totals or {}
+    providers = {
+        c: FakeProvider(c, total=totals.get(c, total), error=errors.get(c)) for c in Category
+    }
     return CatalogService(providers, **kwargs)
 
 

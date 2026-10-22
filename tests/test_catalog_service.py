@@ -125,3 +125,100 @@ def test_home_returns_empty_section_when_provider_fails() -> None:
     sections = {section.category: section for section in home.sections}
     assert sections[Category.attractions].items == []
     assert sections[Category.movies].items
+
+
+# ---------------------------------------------------------------------------
+# All-category pagination: every result must appear exactly once, in
+# round-robin order, no matter the page size or how uneven the categories are.
+# ---------------------------------------------------------------------------
+
+from app.services.catalog import counts_before  # noqa: E402
+from tests.catalog_fakes import FakeProvider  # noqa: E402
+
+ORDER = list(Category)
+
+
+def expected_mixed_ids(totals: dict[Category, int]) -> list[str]:
+    """The full round-robin list: every category's 1st item, then every 2nd, ..."""
+
+    longest = max(totals.values(), default=0)
+    return [
+        f"{category.value}-{n}"
+        for n in range(longest)
+        for category in ORDER
+        if n < totals.get(category, 0)
+    ]
+
+
+def collect_all_pages(service, page_size: int, max_pages: int = 200):
+    """Walk pages until has_next is False, returning every id and the metas."""
+
+    ids: list[str] = []
+    metas = []
+    for page in range(1, max_pages + 1):
+        items, meta = asyncio.run(service.search("x", None, page, page_size, {}))
+        ids.extend(item.external_id for item in items)
+        metas.append(meta)
+        if not meta.has_next:
+            break
+    return ids, metas
+
+
+def test_counts_before_skips_providers_that_run_out() -> None:
+    # Order with totals [3, 1]: movie, book, movie, movie.
+    assert counts_before(0, [3, 1]) == [0, 0]
+    assert counts_before(2, [3, 1]) == [1, 1]
+    assert counts_before(3, [3, 1]) == [2, 1]
+    assert counts_before(4, [3, 1]) == [3, 1]
+    assert counts_before(10, [3, 1]) == [3, 1]  # Cannot take more than exist.
+    assert counts_before(5, [0, 2, 2]) == [0, 2, 2]
+
+
+def test_page_size_one_rotates_through_every_category() -> None:
+    service = make_service(total=3)
+    categories = [
+        asyncio.run(service.search("x", None, page, 1, {}))[0][0].category for page in range(1, 9)
+    ]
+    assert categories == ORDER + ORDER
+
+
+def test_uneven_categories_keep_paginating_until_everything_is_shown() -> None:
+    totals = {Category.movies: 5, Category.books: 1, Category.music: 0, Category.attractions: 2}
+    service = make_service(totals=totals)
+
+    ids, metas = collect_all_pages(service, page_size=3)
+
+    assert ids == [
+        "movies-0", "books-0", "attractions-0",
+        "movies-1", "attractions-1", "movies-2",
+        "movies-3", "movies-4",
+    ]
+    assert [meta.has_next for meta in metas] == [True, True, False]
+    assert all(meta.total == 8 for meta in metas)
+
+
+@pytest.mark.parametrize("page_size", [1, 2, 3, 4, 5, 7, 20])
+@pytest.mark.parametrize(
+    "totals",
+    [
+        {Category.movies: 10, Category.books: 10, Category.music: 10, Category.attractions: 10},
+        {Category.movies: 40, Category.books: 3, Category.music: 0, Category.attractions: 1},
+        {Category.movies: 0, Category.books: 0, Category.music: 7, Category.attractions: 0},
+        {Category.movies: 1, Category.books: 6, Category.music: 2, Category.attractions: 9},
+    ],
+)
+def test_all_pages_together_contain_every_result_exactly_once(totals, page_size) -> None:
+    service = make_service(totals=totals)
+    ids, metas = collect_all_pages(service, page_size)
+
+    assert ids == expected_mixed_ids(totals)  # No gaps, no duplicates, correct order.
+    assert metas[-1].has_next is False
+    assert all(meta.has_next for meta in metas[:-1])
+
+
+def test_fetch_range_covers_ranges_that_cross_page_boundaries() -> None:
+    provider = FakeProvider(Category.books, total=20)
+    result = asyncio.run(provider.fetch_range("x", 3, 5, {}))
+
+    assert [item.external_id for item in result.items] == [f"books-{n}" for n in range(3, 8)]
+    assert result.total == 20
