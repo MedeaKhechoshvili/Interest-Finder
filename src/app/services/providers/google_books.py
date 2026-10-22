@@ -41,22 +41,24 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     image_links = info.get("imageLinks") if isinstance(info.get("imageLinks"), dict) else {}
     image_url = _https(image_links.get("thumbnail") or image_links.get("smallThumbnail"))
 
-    details: dict[str, Any] = {}
+    # Detail keys match the BookDetails table columns.
     authors = [a for a in as_list(info.get("authors")) if isinstance(a, str) and a]
-    if authors:
-        details["authors"] = authors
-    if clean_text(info.get("subtitle")):
-        details["subtitle"] = clean_text(info.get("subtitle"))
-    if clean_text(info.get("publisher")):
-        details["publisher"] = clean_text(info.get("publisher"))
-    if to_int(info.get("pageCount")):
-        details["page_count"] = to_int(info.get("pageCount"))
-    subjects = [c for c in as_list(info.get("categories")) if isinstance(c, str) and c]
-    if subjects:
-        details["subjects"] = subjects
-    for identifier in as_list(info.get("industryIdentifiers")):
-        if isinstance(identifier, dict) and identifier.get("type") == "ISBN_13":
-            details["isbn_13"] = identifier.get("identifier")
+    categories = [c for c in as_list(info.get("categories")) if isinstance(c, str) and c]
+    isbns = {
+        identifier.get("type"): clean_text(identifier.get("identifier"))
+        for identifier in as_list(info.get("industryIdentifiers"))
+        if isinstance(identifier, dict)
+    }
+    details: dict[str, Any] = {
+        "authors": authors or None,
+        "publisher": clean_text(info.get("publisher")),
+        "isbn": isbns.get("ISBN_13") or isbns.get("ISBN_10"),
+        "page_count": to_int(info.get("pageCount")) or None,
+        "language": clean_text(info.get("language")),
+        "published_date": clean_text(info.get("publishedDate")),
+        "categories": categories or None,
+    }
+    details = {key: value for key, value in details.items() if value is not None}
 
     return CatalogItemOut(
         category=Category.books,

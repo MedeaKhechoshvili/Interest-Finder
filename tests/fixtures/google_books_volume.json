@@ -3,13 +3,31 @@
   "volumeInfo": {
     "title": "The Google Story",
     "subtitle": "Inside the Hottest Business, Media, and Technology Success of Our Time",
-    "authors": ["David A. Vise", "Mark Malseed"],
+    "authors": [
+      "David A. Vise",
+      "Mark Malseed"
+    ],
     "publisher": "Random House Publishing Group",
     "publishedDate": "2005",
     "description": "The inside story of Google.",
-    "industryIdentifiers": [{"type": "ISBN_10", "identifier": "0553804570"}, {"type": "ISBN_13", "identifier": "9780553804577"}],
+    "industryIdentifiers": [
+      {
+        "type": "ISBN_10",
+        "identifier": "0553804570"
+      },
+      {
+        "type": "ISBN_13",
+        "identifier": "9780553804577"
+      }
+    ],
     "pageCount": 207,
-    "categories": ["Business & Economics"],
-    "imageLinks": {"smallThumbnail": "http://books.google.com/small.jpg", "thumbnail": "http://books.google.com/thumb.jpg"}
+    "categories": [
+      "Business & Economics"
+    ],
+    "imageLinks": {
+      "smallThumbnail": "http://books.google.com/small.jpg",
+      "thumbnail": "http://books.google.com/thumb.jpg"
+    },
+    "language": "en"
   }
 }

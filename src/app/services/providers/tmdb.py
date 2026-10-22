@@ -16,6 +16,38 @@ BASE_URL = "https://api.themoviedb.org/3"
 IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 TMDB_PAGE_SIZE = 20  # TMDB always returns 20 results per page.
 TMDB_MAX_PAGE = 500  # TMDB rejects page numbers above 500.
+MAX_CAST = 5
+
+
+def _certification(raw: dict[str, Any]) -> str | None:
+    """US age rating (e.g. "R"), from append_to_response=release_dates."""
+
+    release_dates = raw.get("release_dates") if isinstance(raw.get("release_dates"), dict) else {}
+    for country in as_list(release_dates.get("results")):
+        if isinstance(country, dict) and country.get("iso_3166_1") == "US":
+            for release in as_list(country.get("release_dates")):
+                if isinstance(release, dict) and clean_text(release.get("certification")):
+                    return clean_text(release.get("certification"))
+    return None
+
+
+def _credits(raw: dict[str, Any]) -> tuple[str | None, list[str]]:
+    """Director and top-billed cast, from append_to_response=credits."""
+
+    credits = raw.get("credits") if isinstance(raw.get("credits"), dict) else {}
+    director = next(
+        (
+            clean_text(person.get("name"))
+            for person in as_list(credits.get("crew"))
+            if isinstance(person, dict) and person.get("job") == "Director"
+        ),
+        None,
+    )
+    cast_members = sorted(
+        (p for p in as_list(credits.get("cast")) if isinstance(p, dict) and clean_text(p.get("name"))),
+        key=lambda p: to_int(p.get("order")) if to_int(p.get("order")) is not None else 999,
+    )
+    return director, [clean_text(p.get("name")) for p in cast_members[:MAX_CAST]]
 
 
 def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
@@ -31,20 +63,22 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     poster_path = raw.get("poster_path")
     image_url = f"{IMAGE_BASE_URL}{poster_path}" if poster_path else None
 
-    details: dict[str, Any] = {}
-    if raw.get("runtime"):
-        details["runtime_minutes"] = raw["runtime"]
+    # Detail keys match the MovieDetails table columns.
     genres = [
         genre["name"]
         for genre in as_list(raw.get("genres"))
         if isinstance(genre, dict) and genre.get("name")
     ]
-    if genres:
-        details["genres"] = genres
-    if clean_text(raw.get("tagline")):
-        details["tagline"] = clean_text(raw.get("tagline"))
-    if clean_text(raw.get("original_language")):
-        details["original_language"] = raw["original_language"]
+    director, cast = _credits(raw)
+    details: dict[str, Any] = {
+        "runtime_minutes": to_int(raw.get("runtime")) or None,
+        "language": clean_text(raw.get("original_language")),
+        "certification": _certification(raw),
+        "genres": genres or None,
+        "director": director,
+        "cast": cast or None,
+    }
+    details = {key: value for key, value in details.items() if value is not None}
 
     return CatalogItemOut(
         category=Category.movies,
@@ -118,7 +152,11 @@ class TMDBProvider(CatalogProvider):
 
         if not external_id.isdigit():
             raise self.not_found()
-        data = await self._get_json(f"{BASE_URL}/movie/{external_id}", headers=self._headers())
+        data = await self._get_json(
+            f"{BASE_URL}/movie/{external_id}",
+            params={"append_to_response": "credits,release_dates"},
+            headers=self._headers(),
+        )
         item = to_catalog_item(data)
         if item is None:
             raise self.invalid_response("TMDB returned an incomplete movie.")

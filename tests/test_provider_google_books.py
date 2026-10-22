@@ -18,7 +18,11 @@ def test_to_catalog_item_maps_book_fields() -> None:
     assert item.year_or_date == "2005"
     assert item.image_url == "https://books.google.com/thumb.jpg"  # http upgraded to https
     assert item.details["authors"] == ["David A. Vise", "Mark Malseed"]
-    assert item.details["isbn_13"] == "9780553804577"
+    assert item.details["isbn"] == "9780553804577"  # ISBN-13 preferred over ISBN-10
+    assert item.details["publisher"] == "Random House Publishing Group"
+    assert item.details["published_date"] == "2005"
+    assert item.details["categories"] == ["Business & Economics"]
+    assert item.details["language"] == "en"
 
 
 def test_to_catalog_item_strips_html_from_description() -> None:

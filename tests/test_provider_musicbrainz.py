@@ -22,6 +22,9 @@ def test_to_catalog_item_maps_album_fields() -> None:
     assert item.source_rating == 4.6
     assert item.source_rating_count == 120
     assert item.details["artist"] == "Radiohead"
+    assert item.details["release_type"] == "Album"
+    assert item.details["release_date"] == "1997-05-21"
+    assert item.details["genres"] == ["alternative rock", "art rock"]  # Genres win over tags.
 
 
 def test_to_catalog_item_joins_multiple_artists() -> None:
@@ -53,7 +56,8 @@ def test_search_sends_user_agent_and_offset() -> None:
 
     page = run_provider(MusicBrainzProvider, handler, lambda p: p.search("ok computer", 3, 10, {}))
     assert [item.title for item in page.items] == ["OK Computer"]
-    assert page.items[0].details["tags"][0] == "alternative rock"  # Most-voted tag first.
+    # No curated genres in this result, so the most-voted tags are used.
+    assert page.items[0].details["genres"][0] == "alternative rock"
     assert page.total == 2
 
 
@@ -100,6 +104,7 @@ def test_get_details_returns_album() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == f"/ws/2/release-group/{ALBUM_ID}"
         assert "ratings" in request.url.params["inc"]
+        assert "genres" in request.url.params["inc"]
         return httpx.Response(200, json=load_fixture("musicbrainz_release_group.json"))
 
     item = run_provider(MusicBrainzProvider, handler, lambda p: p.get_details(ALBUM_ID))

@@ -31,6 +31,9 @@ def test_to_catalog_item_maps_place_details() -> None:
     assert item.image_url == "https://upload.wikimedia.org/balboa-park.jpg"
     assert item.source_rating is None  # "rate" is popularity, not a user rating.
     assert item.details["city"] == "San Diego"
+    assert item.details["address"] == "San Diego, California, United States of America"
+    assert item.details["attraction_type"] == "gardens and parks"
+    assert item.details["latitude"] == 32.73
 
 
 def test_to_catalog_item_skips_unnamed_places() -> None:

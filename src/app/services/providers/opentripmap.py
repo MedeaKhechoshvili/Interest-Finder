@@ -10,7 +10,13 @@ from typing import Any
 
 from app.core.errors import AppError
 from app.schemas.catalog import CatalogItemOut, Category, Provider
-from app.services.providers.base import ITEM_NOT_FOUND, CatalogProvider, ProviderPage, clean_text
+from app.services.providers.base import (
+    ITEM_NOT_FOUND,
+    CatalogProvider,
+    ProviderPage,
+    clean_text,
+    to_float,
+)
 
 BASE_URL = "https://api.opentripmap.com/0.1/en/places"
 SEARCH_RADIUS_METERS = 15000
@@ -22,6 +28,17 @@ def _kinds(raw: dict[str, Any]) -> list[str]:
     if not isinstance(kinds, str):
         return []
     return [kind.replace("_", " ") for kind in kinds.split(",") if kind][:5]
+
+
+def _format_address(address: dict[str, Any]) -> str | None:
+    """Build "1549 El Prado, San Diego, California, United States" from address parts."""
+
+    street = " ".join(
+        part for part in (clean_text(address.get("house_number")), clean_text(address.get("road"))) if part
+    )
+    parts = [street] + [clean_text(address.get(key)) for key in ("city", "state", "country")]
+    text = ", ".join(part for part in parts if part)
+    return text or None
 
 
 def to_catalog_item(raw: dict[str, Any], city: str | None = None) -> CatalogItemOut | None:
@@ -43,19 +60,17 @@ def to_catalog_item(raw: dict[str, Any], city: str | None = None) -> CatalogItem
     address = raw.get("address") if isinstance(raw.get("address"), dict) else {}
     point = raw.get("point") if isinstance(raw.get("point"), dict) else {}
 
-    details: dict[str, Any] = {}
-    if _kinds(raw):
-        details["kinds"] = _kinds(raw)
-    place_city = clean_text(address.get("city")) or city
-    if place_city:
-        details["city"] = place_city
-    if clean_text(address.get("country")):
-        details["country"] = clean_text(address.get("country"))
-    if "lat" in point and "lon" in point:
-        details["latitude"] = point["lat"]
-        details["longitude"] = point["lon"]
-    if clean_text(raw.get("wikipedia")):
-        details["wikipedia_url"] = raw["wikipedia"]
+    # Detail keys match the AttractionDetails table columns. OpenTripMap has
+    # no price or indoor/outdoor information, so those columns stay empty.
+    kinds = _kinds(raw)
+    details: dict[str, Any] = {
+        "city": clean_text(address.get("city")) or city,
+        "address": _format_address(address),
+        "latitude": to_float(point.get("lat")),
+        "longitude": to_float(point.get("lon")),
+        "attraction_type": kinds[0] if kinds else None,
+    }
+    details = {key: value for key, value in details.items() if value is not None}
 
     return CatalogItemOut(
         category=Category.attractions,

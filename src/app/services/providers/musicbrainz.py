@@ -36,6 +36,14 @@ def _artist_name(raw: dict[str, Any]) -> str | None:
     return name or None
 
 
+def _top_names(entries: Any, limit: int = 5) -> list[str]:
+    """Names from a MusicBrainz genres/tags list, most votes first."""
+
+    valid = [e for e in as_list(entries) if isinstance(e, dict) and clean_text(e.get("name"))]
+    valid.sort(key=lambda e: to_int(e.get("count")) or 0, reverse=True)
+    return [clean_text(e.get("name")) for e in valid[:limit]]
+
+
 def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     """Convert one MusicBrainz release group into a CatalogItemOut, or None if unusable."""
 
@@ -50,18 +58,16 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     release_type = clean_text(raw.get("primary-type"))
     rating = raw.get("rating") if isinstance(raw.get("rating"), dict) else {}
 
-    details: dict[str, Any] = {}
-    if artist:
-        details["artist"] = artist
-    if release_type:
-        details["release_type"] = release_type
-    tags = sorted(
-        (t for t in as_list(raw.get("tags")) if isinstance(t, dict) and t.get("name")),
-        key=lambda t: to_int(t.get("count")) or 0,
-        reverse=True,
-    )
-    if tags:
-        details["tags"] = [t["name"] for t in tags[:5]]
+    # Detail keys match the MusicDetails table columns. MusicBrainz "genres"
+    # are curated; when an album has none, its most-voted "tags" are used.
+    genres = _top_names(raw.get("genres")) or _top_names(raw.get("tags"))
+    details: dict[str, Any] = {
+        "artist": artist,
+        "release_type": release_type,
+        "release_date": clean_text(raw.get("first-release-date")),
+        "genres": genres or None,
+    }
+    details = {key: value for key, value in details.items() if value is not None}
 
     description = None
     if artist:
@@ -158,7 +164,7 @@ class MusicBrainzProvider(CatalogProvider):
             raise self.not_found() from None
         data = await self._throttled_get(
             f"{BASE_URL}/release-group/{external_id}",
-            params={"inc": "artist-credits tags ratings", "fmt": "json"},
+            params={"inc": "artist-credits genres tags ratings", "fmt": "json"},
         )
         item = to_catalog_item(data)
         if item is None:

@@ -107,11 +107,16 @@ def test_get_details_returns_normalized_movie() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == f"/3/movie/{raw['id']}"
+        assert request.url.params["append_to_response"] == "credits,release_dates"
         return httpx.Response(200, json=raw)
 
     item = run_provider(TMDBProvider, handler, lambda p: p.get_details(str(raw["id"])))
     assert item.title == raw["title"]
     assert item.details["runtime_minutes"] == raw["runtime"]
+    assert item.details["director"] == "David Fincher"
+    assert item.details["cast"] == ["Edward Norton", "Brad Pitt", "Helena Bonham Carter"]
+    assert item.details["certification"] == "R"  # US rating, skipping blank entries
+    assert item.details["language"] == "en"
 
 
 def test_get_details_with_non_numeric_id_is_not_found_without_calling_tmdb() -> None:
