@@ -10,6 +10,10 @@ from app.core.database import Base
 from app.models import (
     User,
     CatalogItem,
+    MovieDetails,
+    BookDetails,
+    MusicDetails,
+    AttractionDetails,
     SavedItem,
     Review,
 )

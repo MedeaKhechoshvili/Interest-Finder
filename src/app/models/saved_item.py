@@ -12,7 +12,7 @@ class Status(str, Enum):
     COMPLETED = "completed"
 
 class SavedItem(Base):
-    __tablename__ = "SavedItem"
+    __tablename__ = "SavedItems"
 
     __table_args__ = (
         UniqueConstraint(
