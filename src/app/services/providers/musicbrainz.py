@@ -5,11 +5,12 @@ import time
 import uuid
 from typing import Any
 
-from app.schemas.catalog import CatalogItemOut, Category, Provider
 from app.core.errors import AppError
+from app.schemas.catalog import CatalogItemOut, Category, Provider
 from app.services.providers.base import (
     CatalogProvider,
     ProviderPage,
+    as_list,
     clean_text,
     to_float,
     to_int,
@@ -55,8 +56,8 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     if release_type:
         details["release_type"] = release_type
     tags = sorted(
-        (t for t in raw.get("tags") or [] if isinstance(t, dict) and t.get("name")),
-        key=lambda t: t.get("count", 0),
+        (t for t in as_list(raw.get("tags")) if isinstance(t, dict) and t.get("name")),
+        key=lambda t: to_int(t.get("count")) or 0,
         reverse=True,
     )
     if tags:
@@ -106,29 +107,29 @@ class MusicBrainzProvider(CatalogProvider):
         return {"User-Agent": self.settings.musicbrainz_user_agent, "Accept": "application/json"}
 
     async def _throttled_get(self, url: str, params: dict[str, Any]) -> Any:
-            """Wait if needed so requests stay under MusicBrainz's rate limit.
+        """Wait if needed so requests stay under MusicBrainz's rate limit.
 
-            MusicBrainz sometimes answers 503 when it is busy. That is usually
-            temporary, so the request is retried once after a short pause.
-            """
+        MusicBrainz sometimes answers 503 when it is busy. That is usually
+        temporary, so the request is retried once after a short pause.
+        """
 
-            async with self._lock:
-                for attempt in range(2):
-                    wait = self.settings.musicbrainz_min_interval_seconds - (
-                        time.monotonic() - self._last_request
-                    )
-                    if attempt > 0:
-                        wait = max(wait, self.settings.musicbrainz_retry_delay_seconds)
-                    if wait > 0:
-                        await asyncio.sleep(wait)
-                    try:
-                        return await self._get_json(url, params=params, headers=self._headers())
-                    except AppError as error:
-                        busy = (error.details or {}).get("status_code") == 503
-                        if not busy or attempt == 1:
-                            raise
-                    finally:
-                        self._last_request = time.monotonic()
+        async with self._lock:
+            for attempt in range(2):
+                wait = self.settings.musicbrainz_min_interval_seconds - (
+                    time.monotonic() - self._last_request
+                )
+                if attempt > 0:
+                    wait = max(wait, self.settings.musicbrainz_retry_delay_seconds)
+                if wait > 0:
+                    await asyncio.sleep(wait)
+                try:
+                    return await self._get_json(url, params=params, headers=self._headers())
+                except AppError as error:
+                    busy = (error.details or {}).get("status_code") == 503
+                    if not busy or attempt == 1:
+                        raise
+                finally:
+                    self._last_request = time.monotonic()
 
     async def search(
         self, query: str | None, page: int, page_size: int, filters: dict[str, Any]
@@ -144,9 +145,7 @@ class MusicBrainzProvider(CatalogProvider):
                 "fmt": "json",
             },
         )
-        if not isinstance(data, dict):
-            raise self.invalid_response()
-        raw_results = data.get("release-groups") or []
+        raw_results = self.results_list(data, "release-groups")
         items = [item for item in map(to_catalog_item, raw_results) if item is not None]
         return ProviderPage(items=items, total=to_int(data.get("count")) or 0)
 

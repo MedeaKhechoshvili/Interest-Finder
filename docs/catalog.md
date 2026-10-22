@@ -33,7 +33,8 @@ Provider notes:
   Image links are upgraded from `http://` to `https://`, and HTML is removed
   from descriptions. Browsing without search text uses `subject:fiction`.
 - **MusicBrainz** searches release groups (albums, EPs, singles). Requests are
-  limited to about one per second, as MusicBrainz requires. Album art comes
+  limited to about one per second, as MusicBrainz requires. A 503 (busy)
+  response is retried once after 2 seconds before an error is returned. Album art comes
   from the Cover Art Archive; some albums have no cover, so the frontend
   should show a placeholder if the image fails to load.
 - **OpenTripMap** searches by location in two steps: the city name is turned
@@ -57,6 +58,7 @@ request logging is lowered to WARNING so URLs containing keys are not logged.
 | `MUSICBRAINZ_USER_AGENT` | `InterestFinder/0.1 ( repo URL )` | Identifies the app to MusicBrainz |
 | `PROVIDER_TIMEOUT_SECONDS` | `5` | Timeout for each provider request |
 | `MUSICBRAINZ_MIN_INTERVAL_SECONDS` | `1.0` | Minimum time between MusicBrainz requests |
+| `MUSICBRAINZ_RETRY_DELAY_SECONDS` | `2.0` | Pause before retrying once after a MusicBrainz 503 (busy) response |
 | `DEFAULT_ATTRACTIONS_CITY` | `San Diego` | City used for attractions when no `city` filter is given |
 | `HOME_CACHE_SECONDS` | `600` | How long home page content is reused |
 
@@ -85,6 +87,8 @@ Rules applied to every provider:
 - Empty strings from providers become `null`.
 - A result without an id or a title is skipped, so one bad result never breaks
   a whole search.
+- An optional nested field with the wrong type (for example `authors` sent as a
+  string instead of a list) is ignored rather than breaking the item.
 - `community_rating` and `community_review_count` come from InterestFinder
   reviews, not from providers.
 
@@ -124,9 +128,10 @@ an error. Search results are not stored.
 Category-specific filters only affect their own provider. For example,
 `?author=Austen` narrows book results and is ignored by the other providers.
 
-Searching all categories calls every provider at the same time. Each provider
-returns its share of the page (`page_size` divided by 4, rounded up), and the
-results are interleaved: movie, book, album, place, movie, and so on.
+Searching all categories calls every provider at the same time and mixes the
+results round-robin: movie, book, album, place, movie, and so on. When a
+category runs out of results it is skipped and the others keep taking turns.
+See "Pagination" for how pages of the mixed list are built.
 
 Invalid parameters (an unknown category, `page_size` above 50, `page` below 1)
 return `422 VALIDATION_ERROR` in the standard error format. On the details
@@ -155,6 +160,24 @@ each adapter converts `page`/`page_size` to the provider's own system:
 | MusicBrainz | `offset` + `limit` | `offset = (page - 1) * page_size` |
 | OpenTripMap | `limit` only | Enough results are fetched to cover the page, then sliced |
 
+### Pagination across all categories
+
+When `category` is omitted, the results form one long mixed list (round-robin,
+skipping categories that have run out), and page N is positions
+`(N - 1) * page_size` to `N * page_size` of that list. Every result appears
+exactly once across the pages, including with `page_size=1` and when one
+category has far fewer results than the others.
+
+To build a page, the service first asks every provider, at the same time, for
+the range it would cover if no category ran out (at least one item each, so
+every provider's total is known). With the real totals, it then works out the
+exact range each provider owns on this page (`counts_before` in
+`src/app/services/catalog.py`) and fetches again only where the first request
+did not cover it. `total` is the sum of the providers' totals, and `has_next`
+is true until the end of the mixed list.
+
+### Accuracy of totals
+
 `total` comes from each provider and is approximate for some of them:
 TMDB totals are capped at what is reachable (10,000 movies), Google Books totals
 are estimates, OpenTripMap totals count only the named places that were
@@ -177,7 +200,7 @@ all providers and returned in the standard error format.
 | --- | --- | --- |
 | Provider does not answer within the timeout | 502 | `PROVIDER_TIMEOUT` |
 | Provider cannot be reached, or returns 401/429/5xx | 502 | `PROVIDER_UNAVAILABLE` (`details.status_code` holds the provider's status) |
-| Provider returns something that is not usable JSON, or an item with no title/id | 502 | `PROVIDER_INVALID_RESPONSE` |
+| Provider returns something that is not usable JSON, a results list with the wrong type (for example a string instead of a list), or an item with no title/id | 502 | `PROVIDER_INVALID_RESPONSE` |
 | Provider says the item does not exist, or the id format is invalid | 404 | `ITEM_NOT_FOUND` |
 | OpenTripMap cannot find the requested city | 400 | `INVALID_FILTER` |
 
@@ -216,12 +239,12 @@ providers, so they never call real APIs.
 
 | File | Covers |
 | --- | --- |
-| `test_provider_errors.py` | Timeouts, unreachable providers, error statuses, 404s, invalid JSON, keys never leaked |
+| `test_provider_errors.py` | Timeouts, unreachable providers, error statuses, 404s, invalid JSON, results with the wrong type, keys never leaked |
 | `test_provider_tmdb.py` | Movie mapping, search, pagination across TMDB pages, details, trending |
 | `test_provider_google_books.py` | Book mapping, query building, split pagination, missing key |
 | `test_provider_musicbrainz.py` | Album mapping, artist credits, offsets, User-Agent, invalid ids |
 | `test_provider_opentripmap.py` | City lookup, autosuggest vs radius, unnamed places, unknown cities |
-| `test_catalog_service.py` | Category filtering, all-category search, partial failures, details storage and fallback, home caching |
+| `test_catalog_service.py` | Category filtering, all-category search and pagination (every result exactly once for many page sizes and uneven categories), partial failures, details storage and fallback, home caching |
 | `test_catalog_routes.py` | Response format, validation errors, invalid categories, 404/502 responses, route conflicts |
 
 Run them with:

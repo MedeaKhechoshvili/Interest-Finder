@@ -6,6 +6,7 @@ from app.schemas.catalog import CatalogItemOut, Category, Provider
 from app.services.providers.base import (
     CatalogProvider,
     ProviderPage,
+    as_list,
     clean_text,
     to_float,
     to_int,
@@ -35,7 +36,7 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
         details["runtime_minutes"] = raw["runtime"]
     genres = [
         genre["name"]
-        for genre in raw.get("genres") or []
+        for genre in as_list(raw.get("genres"))
         if isinstance(genre, dict) and genre.get("name")
     ]
     if genres:
@@ -101,9 +102,7 @@ class TMDBProvider(CatalogProvider):
             data = await self._get_json(
                 url, params={**params, "page": tmdb_page}, headers=self._headers()
             )
-            if not isinstance(data, dict):
-                raise self.invalid_response()
-            raw_results.extend(data.get("results") or [])
+            raw_results.extend(self.results_list(data, "results"))
             total = to_int(data.get("total_results")) or 0
             if tmdb_page >= (to_int(data.get("total_pages")) or 0):
                 break
@@ -129,7 +128,6 @@ class TMDBProvider(CatalogProvider):
         """Return this week's trending movies for the home page."""
 
         data = await self._get_json(f"{BASE_URL}/trending/movie/week", headers=self._headers())
-        if not isinstance(data, dict):
-            raise self.invalid_response()
-        items = [item for item in map(to_catalog_item, data.get("results") or []) if item]
+        results = self.results_list(data, "results")
+        items = [item for item in map(to_catalog_item, results) if item is not None]
         return items[:limit]

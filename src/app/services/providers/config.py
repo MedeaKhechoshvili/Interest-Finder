@@ -18,7 +18,6 @@ class ProviderSettings(BaseSettings):
 
     # MusicBrainz allows about one request per second per client.
     musicbrainz_min_interval_seconds: float = 1.0
-
     musicbrainz_retry_delay_seconds: float = 2.0
 
     # OpenTripMap searches need a location, so this city is used when none is given.

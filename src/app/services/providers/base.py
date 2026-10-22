@@ -59,6 +59,43 @@ class CatalogProvider(ABC):
         page = await self.search(None, 1, limit, {})
         return page.items
 
+    async def fetch_range(
+        self, query: str | None, offset: int, limit: int, filters: dict[str, Any]
+    ) -> ProviderPage:
+        """Return `limit` results starting at position `offset` (0-based).
+
+        Adapters paginate with page and page_size, but combining several
+        providers needs arbitrary ranges. A range is covered with at most two
+        pages of size `limit`: e.g. offset=3, limit=5 is page 1 (items 0-4)
+        plus page 2 (items 5-9), sliced to items 3-7.
+        """
+
+        limit = max(limit, 1)
+        first_page = offset // limit + 1
+        skip = offset - (first_page - 1) * limit
+        result = await self.search(query, first_page, limit, filters)
+        items = result.items[skip:]
+        if skip and result.total > first_page * limit:
+            next_result = await self.search(query, first_page + 1, limit, filters)
+            items += next_result.items
+        return ProviderPage(items=items[:limit], total=result.total)
+
+    def results_list(self, data: Any, key: str) -> list[Any]:
+        """Return data[key] as a list, or raise a 502 if the response has the wrong shape.
+
+        A missing key means "no results". A key holding something other than a
+        list (a string, number, or object) means the provider sent unusable data.
+        """
+
+        if not isinstance(data, dict):
+            raise self.invalid_response()
+        value = data.get(key)
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise self.invalid_response(f"{self.name} returned results in an unexpected format.")
+        return value
+
     def not_found(self) -> AppError:
         """Build the standard error for an item that does not exist."""
 
@@ -109,6 +146,16 @@ class CatalogProvider(ABC):
             return response.json()
         except ValueError as exc:
             raise self.invalid_response() from exc
+
+
+def as_list(value: Any) -> list[Any]:
+    """Return value if it is a list, otherwise an empty list.
+
+    Used for optional nested fields (genres, authors, tags) so a field with the
+    wrong type is ignored instead of breaking the whole item.
+    """
+
+    return value if isinstance(value, list) else []
 
 
 def clean_text(value: Any) -> str | None:

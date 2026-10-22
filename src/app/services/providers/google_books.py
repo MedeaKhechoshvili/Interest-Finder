@@ -6,6 +6,7 @@ from app.schemas.catalog import CatalogItemOut, Category, Provider
 from app.services.providers.base import (
     CatalogProvider,
     ProviderPage,
+    as_list,
     clean_text,
     to_float,
     to_int,
@@ -41,7 +42,7 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
     image_url = _https(image_links.get("thumbnail") or image_links.get("smallThumbnail"))
 
     details: dict[str, Any] = {}
-    authors = [a for a in info.get("authors") or [] if isinstance(a, str) and a]
+    authors = [a for a in as_list(info.get("authors")) if isinstance(a, str) and a]
     if authors:
         details["authors"] = authors
     if clean_text(info.get("subtitle")):
@@ -50,10 +51,10 @@ def to_catalog_item(raw: dict[str, Any]) -> CatalogItemOut | None:
         details["publisher"] = clean_text(info.get("publisher"))
     if to_int(info.get("pageCount")):
         details["page_count"] = to_int(info.get("pageCount"))
-    subjects = [c for c in info.get("categories") or [] if isinstance(c, str) and c]
+    subjects = [c for c in as_list(info.get("categories")) if isinstance(c, str) and c]
     if subjects:
         details["subjects"] = subjects
-    for identifier in info.get("industryIdentifiers") or []:
+    for identifier in as_list(info.get("industryIdentifiers")):
         if isinstance(identifier, dict) and identifier.get("type") == "ISBN_13":
             details["isbn_13"] = identifier.get("identifier")
 
@@ -115,10 +116,8 @@ class GoogleBooksProvider(CatalogProvider):
                     **self._key_params(),
                 },
             )
-            if not isinstance(data, dict):
-                raise self.invalid_response()
+            batch = self.results_list(data, "items")
             total = to_int(data.get("totalItems")) or 0
-            batch = data.get("items") or []
             raw_results.extend(batch)
             if len(batch) < batch_size:
                 break  # No more results available.
