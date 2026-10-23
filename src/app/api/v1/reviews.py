@@ -1,8 +1,10 @@
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
+from app.core.dependencies import CurrentUser
 from app.models.catalog_item import CatalogItem
 from app.models.database import SessionDep
 from app.models.review import Review
@@ -21,7 +23,7 @@ router = APIRouter(
 @router.post("/", response_model=ReviewRead, status_code=201)
 def create_review(
     data: ReviewCreate,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     catalog_item = session.get(CatalogItem, data.item_id)
@@ -34,7 +36,7 @@ def create_review(
 
     existing_review = session.scalar(
         select(Review).where(
-            Review.user_id == user_id,
+            Review.user_id == current_user.id,
             Review.item_id == data.item_id,
         )
     )
@@ -48,7 +50,7 @@ def create_review(
     now = datetime.now(timezone.utc)
 
     review = Review(
-        user_id=user_id,
+        user_id=current_user.id,
         item_id=data.item_id,
         rating=data.rating,
         review_text=data.review_text,
@@ -102,13 +104,13 @@ def get_review(
 def update_review(
     review_id: int,
     data: ReviewUpdate,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     review = session.scalar(
         select(Review).where(
             Review.id == review_id,
-            Review.user_id == user_id,
+            Review.user_id == current_user.id,
         )
     )
 
@@ -143,13 +145,13 @@ def update_review(
 @router.delete("/{review_id}", status_code=204)
 def delete_review(
     review_id: int,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     review = session.scalar(
         select(Review).where(
             Review.id == review_id,
-            Review.user_id == user_id,
+            Review.user_id == current_user.id,
         )
     )
 
