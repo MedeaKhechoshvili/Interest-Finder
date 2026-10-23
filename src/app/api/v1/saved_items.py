@@ -1,11 +1,14 @@
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
+from app.core.dependencies import CurrentUser
 from app.models.catalog_item import CatalogItem
 from app.models.database import SessionDep
 from app.models.saved_item import SavedItem, Status
+from app.models.user import User
 from app.schemas.saved_item import (
     SavedItemCreate,
     SavedItemRead,
@@ -22,7 +25,7 @@ router = APIRouter(
 @router.post("/", response_model=SavedItemRead, status_code=201)
 def save_item(
     data: SavedItemCreate,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     catalog_item = session.get(CatalogItem, data.item_id)
@@ -35,7 +38,7 @@ def save_item(
 
     existing_item = session.scalar(
         select(SavedItem).where(
-            SavedItem.user_id == user_id,
+            SavedItem.user_id == current_user.id,
             SavedItem.item_id == data.item_id,
         )
     )
@@ -47,7 +50,7 @@ def save_item(
         )
 
     saved_item = SavedItem(
-        user_id=user_id,
+        user_id=current_user.id,
         item_id=data.item_id,
         status=Status.PLANNED,
     )
@@ -61,12 +64,12 @@ def save_item(
 
 @router.get("/", response_model=list[SavedItemRead])
 def get_saved_items(
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
     status: SavedItemStatus | None = None,
 ):
     query = select(SavedItem).where(
-        SavedItem.user_id == user_id,
+        SavedItem.user_id == current_user.id,
     )
 
     if status is not None:
@@ -86,13 +89,13 @@ def get_saved_items(
 def update_saved_item(
     saved_item_id: int,
     data: SavedItemUpdate,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     saved_item = session.scalar(
         select(SavedItem).where(
             SavedItem.id == saved_item_id,
-            SavedItem.user_id == user_id,
+            SavedItem.user_id == current_user.id,
         )
     )
 
@@ -103,10 +106,11 @@ def update_saved_item(
         )
 
     saved_item.status = Status(data.status.value)
-    saved_item.updated_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    saved_item.updated_at = now
 
     if saved_item.status == Status.COMPLETED:
-        saved_item.completed_at = datetime.now(timezone.utc)
+        saved_item.completed_at = now
     else:
         saved_item.completed_at = None
 
@@ -122,13 +126,13 @@ def update_saved_item(
 )
 def delete_saved_item(
     saved_item_id: int,
-    user_id: int,
+    current_user: CurrentUser,
     session: SessionDep,
 ):
     saved_item = session.scalar(
         select(SavedItem).where(
             SavedItem.id == saved_item_id,
-            SavedItem.user_id == user_id,
+            SavedItem.user_id == current_user.id,
         )
     )
 
