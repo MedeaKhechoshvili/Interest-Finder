@@ -5,14 +5,14 @@ from enum import Enum
 from sqlalchemy import DateTime, String, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from app.core.database import Base
 
 class Status(str, Enum):
     PLANNED = "planned"
     COMPLETED = "completed"
 
 class SavedItem(Base):
-    __tablename__ = "SavedItems"
+    __tablename__ = "SavedItem"
 
     __table_args__ = (
         UniqueConstraint(
@@ -42,7 +42,7 @@ class SavedItem(Base):
 
     saved_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable = False
     )
 
@@ -53,7 +53,7 @@ class SavedItem(Base):
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable = False
     )
 

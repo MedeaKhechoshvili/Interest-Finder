@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from app.core.database import Base
 
 class AttractionDetails(Base):
     __tablename__ = "AttractionDetails"
