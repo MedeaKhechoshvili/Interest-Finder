@@ -41,9 +41,11 @@ def _error_response(
     code: str,
     message: str,
     details: Any | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
+        headers=headers,
         content={
             "error": {
                 "code": code,
@@ -82,6 +84,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
         status_code=exc.status_code,
         code=f"HTTP_{exc.status_code}",
         message=detail,
+        headers=exc.headers,
     )
 
 
