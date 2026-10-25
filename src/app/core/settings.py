@@ -32,10 +32,21 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_secret(self) -> "Settings":
-        """Prevent the development placeholder from being used in production."""
+        """Reject empty and known example signing secrets in production."""
 
-        if self.environment == "production" and self.jwt_secret_key == "change-me-in-env":
-            raise ValueError("JWT_SECRET_KEY must be replaced in production")
+        invalid_secrets = {
+            "",
+            "change-me-in-env",
+            "paste-your-new-generated-secret-here",
+        }
+        if (
+            self.environment == "production"
+            and self.jwt_secret_key.strip().casefold() in invalid_secrets
+        ):
+            raise ValueError(
+                "JWT_SECRET_KEY must be a non-empty, randomly generated secret "
+                "in production; example placeholders are not allowed"
+            )
         return self
 
     @property
