@@ -42,7 +42,7 @@ class SavedItem(Base):
 
     saved_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable = False
     )
 
@@ -53,7 +53,7 @@ class SavedItem(Base):
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default = datetime.now(timezone.utc),
+        default = lambda: datetime.now(timezone.utc),
         nullable = False
     )
 

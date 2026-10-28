@@ -10,6 +10,10 @@ from app.core.database import Base
 from app.models import (
     User,
     CatalogItem,
+    MovieDetails,
+    BookDetails,
+    MusicDetails,
+    AttractionDetails,
     SavedItem,
     Review,
 )
@@ -188,15 +192,18 @@ def test_valid_review_ratings_are_accepted(session, rating):
     assert review.user is user
 
 
+
 def test_user_saved_item_and_review_relationships(session):
     """Verify relationships between users, items, and reviews."""
     user = make_user(session)
     item = make_item(session)
 
     saved = SavedItem(
-        user=user,
-        catalog_item=item,
+    user=user,
+    catalog_item=item,
     )
+    session.add(saved)
+    session.flush()
 
     review = make_review(
         session,
@@ -206,7 +213,6 @@ def test_user_saved_item_and_review_relationships(session):
         comment="Excellent!",
     )
 
-    session.add(saved)
     session.commit()
 
     assert saved in user.saved_item
@@ -216,6 +222,7 @@ def test_user_saved_item_and_review_relationships(session):
     assert review.catalog_item is item
     assert review.user is user
     assert saved.user is user
+
 
 
 def test_duplicate_external_catalog_item_is_rejected(session):
