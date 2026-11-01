@@ -1,0 +1,17 @@
+{
+  "created": "2026-10-21T00:00:00.000Z",
+  "count": 2,
+  "offset": 0,
+  "release-groups": [
+    {
+      "id": "b1392450-e666-3926-a536-22c65f834433",
+      "score": 100,
+      "title": "OK Computer",
+      "primary-type": "Album",
+      "first-release-date": "1997-05-21",
+      "artist-credit": [{"name": "Radiohead", "artist": {"id": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "name": "Radiohead"}}],
+      "tags": [{"count": 3, "name": "rock"}, {"count": 9, "name": "alternative rock"}]
+    },
+    {"id": "missing-title-id", "score": 50}
+  ]
+}
