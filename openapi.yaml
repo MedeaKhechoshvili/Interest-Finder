@@ -1,0 +1,1311 @@
+openapi: 3.1.0
+info:
+  title: InterestFinder API
+  description: REST API for discovering movies, books, music, and attractions; saving
+    items; tracking completion; and writing reviews.
+  version: 1.0.0
+paths:
+  /api/v1/health:
+    get:
+      tags:
+      - Health
+      summary: Check API health
+      description: Return a lightweight status response for local checks and deployment
+        probes.
+      operationId: health_api_v1_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/saved-items/:
+    post:
+      tags:
+      - saved-items
+      summary: Save Item
+      operationId: save_item_api_v1_saved_items__post
+      security:
+      - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedItemCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedItemRead'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: An account, saved item, or review already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - saved-items
+      summary: Get Saved Items
+      operationId: get_saved_items_api_v1_saved_items__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/SavedItemStatus'
+          - type: 'null'
+          title: Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedItemRead'
+                title: Response Get Saved Items Api V1 Saved Items  Get
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/saved-items/{saved_item_id}:
+    patch:
+      tags:
+      - saved-items
+      summary: Update Saved Item
+      operationId: update_saved_item_api_v1_saved_items__saved_item_id__patch
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: saved_item_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Saved Item Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedItemUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedItemRead'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - saved-items
+      summary: Delete Saved Item
+      operationId: delete_saved_item_api_v1_saved_items__saved_item_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: saved_item_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Saved Item Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/reviews/:
+    post:
+      tags:
+      - reviews
+      summary: Create Review
+      operationId: create_review_api_v1_reviews__post
+      security:
+      - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewRead'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: The item must be saved and completed by the current user before
+            review creation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: An account, saved item, or review already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - reviews
+      summary: Get Reviews
+      operationId: get_reviews_api_v1_reviews__get
+      parameters:
+      - name: item_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Item Id
+      - name: user_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewRead'
+                title: Response Get Reviews Api V1 Reviews  Get
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/reviews/{review_id}:
+    get:
+      tags:
+      - reviews
+      summary: Get Review
+      operationId: get_review_api_v1_reviews__review_id__get
+      parameters:
+      - name: review_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Review Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewRead'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - reviews
+      summary: Update Review
+      operationId: update_review_api_v1_reviews__review_id__patch
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: review_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Review Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewRead'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: No review changes supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - reviews
+      summary: Delete Review
+      operationId: delete_review_api_v1_reviews__review_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: review_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Review Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Authentication
+      summary: Register User
+      description: Create a new user account.
+      operationId: register_user_api_v1_auth_register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: An account, saved item, or review already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Login User
+      description: Verify credentials and return a JWT access token.
+      operationId: login_user_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_login_user_api_v1_auth_login_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Authentication
+      summary: Read Current User
+      description: Return the authenticated user's public information.
+      operationId: read_current_user_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          description: Authentication is missing, invalid, or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/home:
+    get:
+      tags:
+      - Home
+      summary: Get home page content
+      description: 'Return featured movies, books, albums, and attractions.
+
+
+        A section whose provider is unavailable is returned with an empty item list
+
+        so the rest of the page still loads.'
+      operationId: home_api_v1_home_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/items:
+    get:
+      tags:
+      - Catalog
+      summary: Search the catalog
+      description: 'Search movies, books, music, and attractions in one normalized
+        format.
+
+
+        Category-specific filters only affect their own category; for example,
+
+        `author` narrows book results and is ignored by the other providers.'
+      operationId: search_items_api_v1_items_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          description: Search text.
+          title: Q
+        description: Search text.
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/Category'
+          - type: 'null'
+          description: Limit results to one category. Omit to search all categories.
+          title: Category
+        description: Limit results to one category. Omit to search all categories.
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 20
+          title: Page Size
+      - name: year
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 2100
+            minimum: 1800
+          - type: 'null'
+          description: 'Movies: release year.'
+          title: Year
+        description: 'Movies: release year.'
+      - name: author
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: 'Books: author name.'
+          title: Author
+        description: 'Books: author name.'
+      - name: subject
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: 'Books: subject or genre.'
+          title: Subject
+        description: 'Books: subject or genre.'
+      - name: artist
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: 'Music: artist name.'
+          title: Artist
+        description: 'Music: artist name.'
+      - name: city
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: 'Attractions: city name.'
+          title: City
+        description: 'Attractions: city name.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedItems'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: An external provider failed, timed out, or returned unusable
+            data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/items/{category}/{external_id}:
+    get:
+      tags:
+      - Catalog
+      summary: Get one catalog item
+      description: 'Return one item''s details from its provider, using the provider''s
+        own id.
+
+
+        The item and its category details are saved to the database, so the
+
+        response includes the InterestFinder `id` that saved items and reviews use.
+
+        If the provider is unavailable, the saved copy is returned when one exists.'
+      operationId: get_item_api_v1_items__category___external_id__get
+      parameters:
+      - name: category
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Category'
+      - name: external_id
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 100
+          title: External Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '422':
+          description: Invalid request data. Submitted values are omitted from validation
+            details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource not found or not owned by the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error; internal details are not exposed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: An external provider failed, timed out, or returned unusable
+            data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    Body_login_user_api_v1_auth_login_post:
+      properties:
+        grant_type:
+          anyOf:
+          - type: string
+            pattern: ^password$
+          - type: 'null'
+          title: Grant Type
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          format: password
+          title: Password
+        scope:
+          type: string
+          title: Scope
+          default: ''
+        client_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Id
+        client_secret:
+          anyOf:
+          - type: string
+          - type: 'null'
+          format: password
+          title: Client Secret
+      type: object
+      required:
+      - username
+      - password
+      title: Body_login_user_api_v1_auth_login_post
+    CatalogItemOut:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+        category:
+          $ref: '#/components/schemas/Category'
+        provider:
+          $ref: '#/components/schemas/Provider'
+        external_id:
+          type: string
+          title: External Id
+        title:
+          type: string
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        year_or_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Year Or Date
+        source_rating:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Source Rating
+        source_rating_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Source Rating Count
+        community_rating:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Community Rating
+        community_review_count:
+          type: integer
+          title: Community Review Count
+          default: 0
+        details:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Details
+      type: object
+      required:
+      - category
+      - provider
+      - external_id
+      - title
+      title: CatalogItemOut
+      description: One catalog item in the common InterestFinder format.
+    Category:
+      type: string
+      enum:
+      - movies
+      - books
+      - music
+      - attractions
+      title: Category
+      description: The four catalog categories InterestFinder supports.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthData:
+      properties:
+        status:
+          type: string
+          title: Status
+        service:
+          type: string
+          title: Service
+        version:
+          type: string
+          title: Version
+      type: object
+      required:
+      - status
+      - service
+      - version
+      title: HealthData
+    HealthResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/HealthData'
+        request_id:
+          type: string
+          title: Request Id
+      additionalProperties: false
+      type: object
+      required:
+      - data
+      - request_id
+      title: HealthResponse
+    HomeData:
+      properties:
+        sections:
+          items:
+            $ref: '#/components/schemas/HomeSection'
+          type: array
+          title: Sections
+      type: object
+      required:
+      - sections
+      title: HomeData
+      description: All featured sections shown on the home page.
+    HomeResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/HomeData'
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - data
+      - request_id
+      title: HomeResponse
+      description: Response body for GET /api/v1/home.
+    HomeSection:
+      properties:
+        category:
+          $ref: '#/components/schemas/Category'
+        title:
+          type: string
+          title: Title
+        items:
+          items:
+            $ref: '#/components/schemas/CatalogItemOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - category
+      - title
+      - items
+      title: HomeSection
+      description: One row of featured items on the home page.
+    ItemResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/CatalogItemOut'
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - data
+      - request_id
+      title: ItemResponse
+      description: Response body for GET /api/v1/items/{category}/{external_id}.
+    PaginatedItems:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/CatalogItemOut'
+          type: array
+          title: Data
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - data
+      - meta
+      - request_id
+      title: PaginatedItems
+      description: Response body for GET /api/v1/items.
+    PaginationMeta:
+      properties:
+        page:
+          type: integer
+          title: Page
+        page_size:
+          type: integer
+          title: Page Size
+        total:
+          type: integer
+          title: Total
+        has_next:
+          type: boolean
+          title: Has Next
+      type: object
+      required:
+      - page
+      - page_size
+      - total
+      - has_next
+      title: PaginationMeta
+      description: Pagination information for collection responses.
+    Provider:
+      type: string
+      enum:
+      - tmdb
+      - google_books
+      - musicbrainz
+      - opentripmap
+      title: Provider
+      description: The external provider behind each category.
+    ReviewCreate:
+      properties:
+        item_id:
+          type: integer
+          title: Item Id
+        rating:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Rating
+        review_text:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Review Text
+      type: object
+      required:
+      - item_id
+      - rating
+      title: ReviewCreate
+    ReviewRead:
+      properties:
+        id:
+          type: integer
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        item_id:
+          type: integer
+          title: Item Id
+        rating:
+          type: integer
+          title: Rating
+        review_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Review Text
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - user_id
+      - item_id
+      - rating
+      - review_text
+      - created_at
+      - updated_at
+      title: ReviewRead
+    ReviewUpdate:
+      properties:
+        rating:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Rating
+        review_text:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Review Text
+      type: object
+      title: ReviewUpdate
+    SavedItemCreate:
+      properties:
+        item_id:
+          type: integer
+          title: Item Id
+      type: object
+      required:
+      - item_id
+      title: SavedItemCreate
+    SavedItemRead:
+      properties:
+        id:
+          type: integer
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        item_id:
+          type: integer
+          title: Item Id
+        status:
+          $ref: '#/components/schemas/SavedItemStatus'
+        saved_at:
+          type: string
+          format: date-time
+          title: Saved At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - user_id
+      - item_id
+      - status
+      - saved_at
+      - completed_at
+      - updated_at
+      title: SavedItemRead
+    SavedItemStatus:
+      type: string
+      enum:
+      - planned
+      - completed
+      title: SavedItemStatus
+    SavedItemUpdate:
+      properties:
+        status:
+          $ref: '#/components/schemas/SavedItemStatus'
+      type: object
+      required:
+      - status
+      title: SavedItemUpdate
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+      type: object
+      required:
+      - access_token
+      - token_type
+      title: TokenResponse
+    UserPublic:
+      properties:
+        id:
+          type: integer
+          title: Id
+        full_name:
+          type: string
+          title: Full Name
+        email:
+          type: string
+          title: Email
+        is_active:
+          type: boolean
+          title: Is Active
+      type: object
+      required:
+      - id
+      - full_name
+      - email
+      - is_active
+      title: UserPublic
+      description: User information that is safe to return to clients.
+    UserRegister:
+      properties:
+        full_name:
+          type: string
+          maxLength: 100
+          minLength: 2
+          title: Full Name
+        email:
+          type: string
+          maxLength: 254
+          minLength: 5
+          title: Email
+        password:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: Password
+        terms_accepted:
+          type: boolean
+          title: Terms Accepted
+      type: object
+      required:
+      - full_name
+      - email
+      - password
+      - terms_accepted
+      title: UserRegister
+      description: Validate information submitted during registration.
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ErrorBody:
+      properties:
+        code:
+          title: Code
+          type: string
+        message:
+          title: Message
+          type: string
+        details:
+          anyOf:
+          - {}
+          - type: 'null'
+          default: null
+          title: Details
+      required:
+      - code
+      - message
+      title: ErrorBody
+      type: object
+    ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+        request_id:
+          title: Request Id
+          type: string
+      required:
+      - error
+      - request_id
+      title: ErrorResponse
+      type: object
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /api/v1/auth/login

@@ -10,6 +10,7 @@ from app.api.v1.routes import router as api_router
 from app.core.database import init_db
 from app.core.errors import install_exception_handlers
 from app.core.logging import configure_logging
+from app.core.openapi import install_openapi_schema
 from app.core.settings import get_settings
 from app.middleware.request_context import RequestContextMiddleware
 
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
 
     application.include_router(api_router)
     install_exception_handlers(application)
+    install_openapi_schema(application)
     return application
 
 

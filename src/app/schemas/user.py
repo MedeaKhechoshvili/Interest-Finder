@@ -50,3 +50,8 @@ class UserPublic(BaseModel):
     full_name: str
     email: str
     is_active: bool
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str

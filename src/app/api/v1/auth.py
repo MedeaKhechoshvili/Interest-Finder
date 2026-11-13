@@ -19,7 +19,7 @@ from app.core.auth import (
 from app.core.database import get_db
 from app.core.dependencies import CurrentUser
 from app.models.user import User
-from app.schemas.user import UserPublic, UserRegister
+from app.schemas.user import TokenResponse, UserPublic, UserRegister
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -80,7 +80,7 @@ def register_user(
     return user
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 def login_user(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: DatabaseSession,

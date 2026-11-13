@@ -8,6 +8,7 @@ from app.core.dependencies import CurrentUser
 from app.models.catalog_item import CatalogItem
 from app.models.database import SessionDep
 from app.models.review import Review
+from app.models.saved_item import SavedItem, Status
 from app.schemas.review import (
     ReviewCreate,
     ReviewRead,
@@ -45,6 +46,19 @@ def create_review(
         raise HTTPException(
             status_code=409,
             detail="You have already reviewed this item",
+        )
+
+    completed_item = session.scalar(
+        select(SavedItem).where(
+            SavedItem.user_id == current_user.id,
+            SavedItem.item_id == data.item_id,
+            SavedItem.status == Status.COMPLETED,
+        )
+    )
+    if completed_item is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Save this item and mark it completed before reviewing it",
         )
 
     now = datetime.now(timezone.utc)

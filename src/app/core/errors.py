@@ -73,7 +73,11 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
         status_code=422,
         code="VALIDATION_ERROR",
         message="The request data failed validation.",
-        details=jsonable_encoder(exc.errors()),
+        # Validation inputs/context can contain passwords or other submitted secrets.
+        details=jsonable_encoder([
+            {key: value for key, value in error.items() if key not in {"input", "ctx"}}
+            for error in exc.errors()
+        ]),
     )
 
 
