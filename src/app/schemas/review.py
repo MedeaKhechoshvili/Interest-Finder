@@ -3,6 +3,13 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+def non_null_rating_schema(schema: dict) -> None:
+    """Document omission as allowed, but explicit null as invalid."""
+    choices = schema.pop("anyOf", [])
+    schema.update(next((choice for choice in choices if choice.get("type") == "integer"), {}))
+    schema.pop("default", None)
+
+
 class ReviewCreate(BaseModel):
     item_id: int
     rating: int = Field(ge=1, le=5)
@@ -10,7 +17,9 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewUpdate(BaseModel):
-    rating: int | None = Field(default=None, ge=1, le=5)
+    rating: int | None = Field(
+        default=None, ge=1, le=5, json_schema_extra=non_null_rating_schema
+    )
     review_text: str | None = Field(default=None, max_length=2000)
 
     @field_validator("rating")
