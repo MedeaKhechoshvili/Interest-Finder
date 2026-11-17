@@ -114,3 +114,7 @@ See [Backend verification and contract comparison](docs/backend-verification.md)
 ### Submission
 
 Include source code, tests, `requirements.txt`, `pyproject.toml`, `uv.lock`, this README, `openapi.yaml`, and the verification report in the submission ZIP. Exclude `.venv`, `.env`, database files, caches, and Git metadata. `requirements.txt` lists dependencies; the virtual environment itself is not a submission artifact.
+
+## Frontend foundation
+
+The React/Vite setup lives in [`frontend/`](frontend/README.md). See that README for Node requirements, installation, formatting, tests, and feature handoffs. This initial frontend contains no Home or other page implementation.

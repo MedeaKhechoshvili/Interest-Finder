@@ -1,0 +1,3 @@
+# Keep frontend text files consistent with Prettier on Windows, macOS, and Linux.
+# text=auto preserves binary assets such as images.
+/frontend/** text=auto eol=lf

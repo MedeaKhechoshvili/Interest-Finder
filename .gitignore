@@ -17,3 +17,12 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Frontend dependencies, local configuration, and test output
+node_modules/
+.env.*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
