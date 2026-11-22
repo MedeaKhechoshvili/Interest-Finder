@@ -19,12 +19,12 @@ Users can organize saved items into planned and completed lists. Completed items
 
 ## Design Direction
 
-The interface follows a forest-green and cream editorial visual identity. The desktop and responsive mobile designs were created in Figma and will guide the React implementation.
+The interface follows a forest-green and cream editorial visual identity. The desktop and responsive mobile designs were created in Figma and will guide the Next.js implementation.
 
 ## Development Plan
 
 1. Front-end design and responsive layout
-2. React implementation
+2. Next.js frontend implementation
 3. Backend development
 4. Database and API integration
 5. Testing and deployment
@@ -117,4 +117,4 @@ Include source code, tests, `requirements.txt`, `pyproject.toml`, `uv.lock`, thi
 
 ## Frontend foundation
 
-The React/Vite setup lives in [`frontend/`](frontend/README.md). See that README for Node requirements, installation, formatting, tests, and feature handoffs. This initial frontend contains no Home or other page implementation.
+The Next.js frontend lives in [`frontend/`](frontend/README.md) and uses TypeScript, shadcn/ui, and Tailwind CSS. It includes login, registration, logout, a protected account page, shared navigation/layout, and a server-side API proxy to FastAPI. Home currently redirects to login; Discover and My Lists are placeholders, and Detail/review screens remain to be implemented. See the frontend README for setup instructions and current limitations, and the [frontend work division](frontend/InterestFinder_Frontend_Role_Division.md) for feature ownership.

@@ -20,7 +20,7 @@ Build the InterestFinder frontend using Next.js, TypeScript, shadcn/ui, and Tail
 
 Everyone writes tests for their own code, checks responsive behavior, supplies their own contribution notes, and fixes defects in their own feature. Nathan consolidates the written submission; Bishal is not responsible for documentation.
 
-All implementation paths below are relative to `frontend-standart/`.
+All implementation paths below are relative to `frontend/`.
 
 ## 3. Medea Khechoshvili — Foundation, authentication, and Home
 

@@ -1,7 +1,6 @@
-# InterestFinder simple frontend
+# InterestFinder frontend
 
-A separate Next.js frontend with TypeScript, Tailwind, and shadcn/ui. This copy contains the frontend source only. This version keeps separate,
-readable form components and has no test suite or Docker files.
+The Next.js frontend for InterestFinder uses TypeScript, Tailwind CSS, and shadcn/ui. Frontend files live in `frontend/`; the FastAPI backend lives in the repository root's `src/` directory. Forms use separate, readable components. An automated frontend test suite has not been added yet.
 
 This project was created with the official starter:
 
@@ -14,12 +13,13 @@ removed. The `server-only` dependency prevents backend helpers from being
 imported into browser code. The official shadcn CLI supplies the shared UI
 components and their Radix dependencies.
 
-## Run this copy
+## Run the frontend and backend
 
-Install Node.js 22.12 or newer, which includes npm. Extract the ZIP and open a
-terminal inside the extracted `dea-frontend` folder.
+Install Node.js 22.12 or newer, which includes npm. Open a terminal in the cloned
+Interest-Finder repository root, then run:
 
 ```bash
+cd frontend
 npm ci
 npm run dev
 ```
@@ -27,19 +27,29 @@ npm run dev
 Open http://localhost:3000/login. Next.js regenerates its build and type files.
 
 The frontend defaults to the backend at http://127.0.0.1:8000/api/v1. Login,
-registration, and data operations need that backend running. The backend is a
-separate project and is not included in this ZIP. Start it from the full
-InterestFinder repository using its setup instructions. If its virtual
-environment is already installed, the Linux/macOS command is:
+registration, and data operations need FastAPI running too.
+
+Open a **separate terminal in the repository root**, not in `frontend/`.
+Follow the [root README](../README.md#backend-development) for first-time backend
+installation and private environment configuration. If the backend is already
+configured, start it on Windows PowerShell with:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir src
+```
+
+On Linux/macOS, from the same repository root:
 
 ```bash
 .venv/bin/python -m uvicorn app.main:app --reload --app-dir src
 ```
 
-On Windows, use `.venv\Scripts\python.exe` instead.
+For a different backend address or frontend port, create `frontend/.env.local`
+from the frontend example and edit `BACKEND_API_URL` and `APP_ORIGIN`. Run the
+following commands inside `frontend/`, and only copy the example if you do not
+already have a configured `.env.local`.
 
-For a different backend address or frontend port, copy `.env.example` to
-`.env.local` and edit `BACKEND_API_URL` and `APP_ORIGIN`. On Linux/macOS:
+On Linux/macOS:
 
 ```bash
 cp .env.example .env.local
@@ -54,9 +64,9 @@ Copy-Item .env.example .env.local
 If port 3000 is occupied, set `APP_ORIGIN=http://localhost:3001` and run
 `npm run dev -- --port 3001`.
 
-The ZIP contains source code, configuration, the dependency lock file, UI license
-notices, and the frontend assignment. Dependencies, build output, caches,
-private environment files, and Git metadata are excluded.
+The frontend folder contains source code, configuration, the dependency lock
+file, UI license notices, and the frontend work division. Keep dependencies,
+build output, caches, and private environment files out of commits.
 
 ## What is included
 
