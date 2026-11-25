@@ -54,10 +54,20 @@ Coordinate changes to shared fixtures and helpers before changing them.
 - Add assertions for success, validation, permissions, and failed requests.
 - Future-feature folders contain README plans, not passing or skipped test stubs.
 
-The existing suite has 71 unit/component cases and five browser scenarios run on
-desktop and mobile. The complete account-to-review scenario is in `workflows`.
+The existing suite has 77 unit/component cases and seven browser scenarios run on
+desktop and mobile (14 Playwright tests). The complete account-to-review scenario is in `workflows`.
 It exercises current auth UI plus saved-item/review proxy routes. Each feature
 owner adds actual page interactions when their screens are implemented.
+
+The merged review components in `src/components/reviews/` do not have unit tests
+yet. Their review tests belong in `unit/details-reviews` (Yousuf). Until then,
+combined function coverage is 44.21 percent and `npm run test:coverage` fails its
+50 percent function threshold. See [UNIT_TESTS.md](../UNIT_TESTS.md#coverage).
+
+Browser tests that fill in forms must wait for the field to be editable
+(`await expect(field).toBeEditable()`) and check `toHaveValue()` before
+submitting, because forms stay disabled until hydration finishes. See
+[INTEGRATION_TESTS.md](../INTEGRATION_TESTS.md#waiting-for-hydrated-forms).
 
 ## Run from the frontend folder
 

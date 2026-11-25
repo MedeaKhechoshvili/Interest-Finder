@@ -28,7 +28,8 @@ Terminal 1, from the repository root:
 
 API documentation: http://localhost:8000/docs
 
-Terminal 2, from the repository root:
+Terminal 2, from the repository root (Node.js 26.13.1 and npm 12.2.3; see
+`frontend/.nvmrc` and `packageManager` in `package.json`):
 
 ```bash
 cd frontend
@@ -112,14 +113,35 @@ before running the integration command.
 
 ## What is checked
 
-Each scenario runs in a desktop browser and a mobile browser configuration:
+Each of the seven scenarios runs in a desktop browser (Desktop Chrome) and a mobile
+browser (Pixel 7), for 14 tests in total:
 
 1. Registration and login through the actual frontend forms, session cookie
-   protection, account reload, protected API calls, and logout.
+   protection, account reload, protected API calls, and logout
+   (`workflows/account-to-review.spec.ts`).
 2. The real API's incorrect-credentials response displayed by the frontend.
 3. Guest access protection and rejection of foreign-origin writes.
 4. Invalid-token rejection by FastAPI and cookie removal by Next.js.
-5. Responsive form overflow and the shadcn mobile navigation sheet.
+5. Desktop and mobile layouts of the login and registration pages, with no page
+   overflow, plus the shadcn mobile navigation sheet (`layout/responsive.spec.ts`).
+6. The guest login prompt: it opens from a private action, fits the screen,
+   closes with Escape and returns focus, and its links return to the original page
+   after a real login (`auth/prompt.spec.ts`).
+7. Guest navigation without My Lists links or buttons (`auth/prompt.spec.ts`).
+
+Latest local run (Windows, Node.js 26.13.1): 14 of 14 passed. The mobile login
+scenarios were then repeated five times (`--project=mobile --repeat-each=5`) and
+passed 15 of 15. The development database was unchanged.
+
+### Waiting for hydrated forms
+
+An earlier mobile run registered successfully but stayed on the login page with
+an empty email field. The test had typed into the server-rendered form before
+React hydrated it, and hydration reset the field. The forms now stay disabled
+until hydration finishes. Before typing, tests wait for
+`toBeEditable()`, and they check the entered values with `toHaveValue()` before
+submitting. There are no fixed sleeps. Use the same pattern in new tests that
+fill in forms.
 
 The complete workflow also saves a fixture book, marks it completed, and creates
 a review through the Next.js API proxy. Independent requests to FastAPI read
@@ -147,6 +169,10 @@ npm run test:integration -- --headed
 
 The HTML report is in `playwright-report/`. Failed runs save screenshots and
 traces in `test-results/`. Both folders are ignored by Git. Stop a run with Ctrl+C.
+
+Because the test frontend runs `next dev`, Next.js 16 may create `frontend/AGENTS.md`
+(instructions for AI coding tools). It is not a test result. Setting `agentRules: false` in
+`next.config.ts` turns it off.
 
 These tests provide frontend-to-backend integration evidence. Unit and component
 tests are separate: see [UNIT_TESTS.md](UNIT_TESTS.md) and run

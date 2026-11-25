@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { AuthPromptProvider } from "@/components/auth-prompt";
 import { getCurrentUser } from "@/lib/session";
 import "./globals.css";
 
@@ -35,9 +36,11 @@ export default async function RootLayout(props: LayoutProps) {
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <Header signedIn={signedIn} />
-        {props.children}
-        <Footer />
+        <AuthPromptProvider signedIn={signedIn}>
+          <Header signedIn={signedIn} />
+          {props.children}
+          <Footer />
+        </AuthPromptProvider>
       </body>
     </html>
   );
