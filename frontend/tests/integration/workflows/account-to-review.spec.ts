@@ -13,8 +13,11 @@ test("register, log in, save, complete, review, and log out through the real API
   const password = randomUUID() + "-password";
 
   await page.goto("/register");
+  await expect(page.getByLabel("Full Name")).toBeEditable();
   await page.getByLabel("Full Name").fill("Integration Reader");
-  await page.getByLabel("Email Address").fill(email);
+  const emailInput = page.getByLabel("Email Address");
+  await expect(emailInput).toBeEditable();
+  await emailInput.fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password").fill(password);
   await page.locator("#terms").check();
@@ -24,8 +27,11 @@ test("register, log in, save, complete, review, and log out through the real API
     page.getByRole("status").filter({ hasText: "Your account is ready" }),
   ).toBeVisible();
 
-  await page.getByLabel("Email Address").fill(email);
+  await expect(emailInput).toBeEditable();
+  await emailInput.fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  await expect(emailInput).toHaveValue(email);
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue(password);
   await page.getByRole("button", { name: "Log In", exact: true }).click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(

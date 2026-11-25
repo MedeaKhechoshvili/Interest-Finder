@@ -1,4 +1,5 @@
 import React from "react";
+import { renderToString } from "react-dom/server";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
@@ -32,6 +33,40 @@ function fillRegistration() {
     target: { value: "valid-password" },
   });
 }
+
+describe("form hydration", function () {
+  it.each([
+    {
+      name: "login",
+      form: <LoginForm next="/account" registered={false} expired={false} />,
+    },
+    { name: "registration", form: <RegisterForm next="/account" /> },
+  ])("keeps $name disabled until hydration finishes", async function (example) {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = renderToString(example.form);
+
+    // server rendered fields must not accept input before react is ready
+    expect(container.querySelector("fieldset")).toBeDisabled();
+    expect(container.querySelector("input[name='email']")).toBeDisabled();
+    expect(container.querySelector("button[type='submit']")).toBeDisabled();
+
+    render(example.form, { container: container, hydrate: true });
+    const emailInput = screen.getByLabelText("Email Address");
+    await waitFor(function () {
+      expect(emailInput).toBeEnabled();
+    });
+    await userEvent.type(emailInput, "reader@example.com");
+    await userEvent.type(
+      screen.getByLabelText("Password", { exact: true }),
+      "valid-password",
+    );
+    expect(emailInput).toHaveValue("reader@example.com");
+    expect(screen.getByLabelText("Password", { exact: true })).toHaveValue(
+      "valid-password",
+    );
+  });
+});
 
 describe("login form", function () {
   it("sends credentials and navigates to the requested page", async function () {
@@ -98,7 +133,7 @@ describe("login form", function () {
     );
   });
 
-  it("shows registration success and toggles password visibility", async function () {
+  it("shows registration success without adding password controls", async function () {
     render(<LoginForm next="/account" registered={true} expired={false} />);
     expect(screen.getByRole("status")).toHaveTextContent(
       "Your account is ready",
@@ -107,13 +142,9 @@ describe("login form", function () {
       "type",
       "password",
     );
-    await userEvent.click(
-      screen.getByRole("checkbox", { name: "Show password" }),
-    );
-    expect(screen.getByLabelText("Password", { exact: true })).toHaveAttribute(
-      "type",
-      "text",
-    );
+    expect(
+      screen.queryByRole("checkbox", { name: "Show password" }),
+    ).not.toBeInTheDocument();
   });
 
   it("prevents duplicate submissions while a request is pending", async function () {
@@ -200,17 +231,21 @@ describe("registration form", function () {
     expect(goToPage).not.toHaveBeenCalled();
   });
 
-  it("handles offline registration and shows both passwords", async function () {
+  it("handles offline registration while keeping passwords hidden", async function () {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     render(<RegisterForm next="/account" />);
     fillRegistration();
-    await userEvent.click(
-      screen.getByRole("checkbox", { name: "Show passwords" }),
+    expect(screen.getByLabelText("Password", { exact: true })).toHaveAttribute(
+      "type",
+      "password",
     );
     expect(screen.getByLabelText("Confirm Password")).toHaveAttribute(
       "type",
-      "text",
+      "password",
     );
+    expect(
+      screen.queryByRole("checkbox", { name: "Show passwords" }),
+    ).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("checkbox", { name: /I agree/ }));
     await userEvent.click(screen.getByRole("button", { name: "Sign Up" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(

@@ -11,11 +11,28 @@ npx create-next-app@latest frontend-standart --typescript --tailwind --eslint --
 The starter's demo, online fonts, caching options, and example images were
 removed. The `server-only` dependency prevents backend helpers from being
 imported into browser code. The official shadcn CLI supplies the shared UI
-components and their Radix dependencies.
+components and their Radix dependencies. ESLint, which the starter included,
+has since been removed from this frontend (see [Build and check types](#build-and-check-types)).
+
+## Versions
+
+Exact versions are pinned in `package.json` and `package-lock.json`:
+
+| Tool | Version |
+| --- | --- |
+| Node.js | 26.13.1 (recorded in `.nvmrc`; `engines` accepts `>=26.13.1 <27`) |
+| npm | 12.2.3 (recorded in `packageManager`) |
+| Next.js | 16.4.6 |
+| React and React DOM | 19.3.1 |
+| TypeScript | 7.0.2 |
+| Tailwind CSS | 4.3.5 (loaded through `@tailwindcss/turbopack`) |
+| shadcn CLI / radix-ui | 4.23.1 / 1.8.1 |
+| Vitest | 5.1.2 |
+| Playwright | 1.65.1 |
 
 ## Run the frontend and backend
 
-Install Node.js 22.12 or newer, which includes npm. Open a terminal in the cloned
+Install Node.js 26.13.1, which includes npm 12.2.3. Open a terminal in the cloned
 Interest-Finder repository root, then run:
 
 ```bash
@@ -23,6 +40,9 @@ cd frontend
 npm ci
 npm run dev
 ```
+
+If your installed npm is a different version, run the lock-file install with the
+recorded one instead: `npx --yes npm@12.2.3 ci`.
 
 Open http://localhost:3000/login. Next.js regenerates its build and type files.
 
@@ -72,17 +92,45 @@ build output, caches, and private environment files out of commits.
 
 - Responsive login and registration forms using shadcn inputs and buttons.
 - Name, email, password confirmation, and terms acceptance.
-- Visible form errors, loading buttons, and password visibility controls.
+- Visible form errors, success/session messages, and loading buttons.
+- A "Forgot Password?" dialog explaining that password reset is not available yet.
 - Real FastAPI registration and login.
 - A protected account page, session restoration on reload, and logout.
-- A responsive header with a simple mobile menu and a shared footer.
-- A small backend proxy and browser API helper for future feature pages.
+- A responsive header with a mobile menu sheet and a shared footer.
+- A shared guest login prompt (`useAuthPrompt().requireAuth()`) for private actions.
+- A small backend proxy and browser API helper for feature pages.
 - Basic loading, error, and missing-page screens.
 
 Home currently redirects to login. Discover and My Lists are placeholders, just
-like the first frontend. Detail, discovery, saved-list cards, and review screens
-are still the other feature owners' work. Terms and privacy text are provisional
-project copy.
+like the first frontend. Detail, discovery, saved-list cards, and save controls
+are still the other feature owners' work. The review components in
+`src/components/reviews/` (list, create, edit, delete) have been merged but are
+not used on a page yet, because they need the Detail page. Terms and privacy text
+are provisional project copy.
+
+### Guest login prompt
+
+Feature pages call `requireAuth(returnPath)` before a private action such as
+saving or reviewing. For a signed-in user it returns `true` and the action
+continues. For a guest it returns `false` and opens the shared "Join
+InterestFinder" dialog, whose Log In and Create Account links return to
+`returnPath` afterward. Unsafe or external return paths are replaced with
+`/account`. The prompt is only a convenience: FastAPI still checks the session
+and record ownership for every private request.
+
+`/auth-prompt-demo` shows the prompt and is used by the integration tests. It
+only exists under `npm run dev`; production builds return "not found" for it.
+
+### Form hydration
+
+The login and registration forms stay disabled until React has hydrated them
+(`src/lib/use-hydrated.ts`). Before this, a fast user or browser test could type
+into the server-rendered fields before React attached its handlers. Hydration
+then reset the fields to empty, so a mobile test that had already registered
+successfully ended up on the login page with an empty email field. With the fields disabled until hydration
+finishes, typing only starts once the form works. Browser tests wait for the
+fields to become editable and check their values before submitting. The
+trade-off is that these forms need JavaScript.
 
 ## Where to read the code
 
@@ -101,8 +149,13 @@ src/lib/session.ts             reads and verifies the session
 src/lib/backend.ts             makes server requests to fastapi
 src/lib/api.ts                 makes browser requests through next
 src/app/api/backend/           forwards known feature routes
+src/lib/return-path.ts         keeps return paths inside this frontend
+src/lib/navigation.ts          full page navigation after auth changes
+src/lib/use-hydrated.ts        keeps forms disabled until hydration finishes
+src/components/auth-prompt.tsx shared guest login prompt
 src/components/header.tsx      navigation and mobile menu
 src/components/footer.tsx      footer
+src/components/reviews/        review list and form (owned by Yousuf)
 src/app/globals.css            shared colors and responsive styles
 ```
 
@@ -117,15 +170,17 @@ The components in `src/components/ui/` were installed with the official shadcn C
 
 ```bash
 npx shadcn@latest init --preset nova --base radix --no-monorepo --no-rtl --yes button input label checkbox card alert accordion sheet
+npx shadcn add dialog
 ```
 
 - `Button`: submit, logout, retry, menu, and account navigation controls.
 - `Input` and `Label`: login and registration fields.
-- `Checkbox`: password visibility and terms acceptance.
+- `Checkbox`: terms acceptance.
 - `Card`: login, registration, and account panels.
 - `Alert`: form errors and success/session messages.
-- `Accordion`: password-help disclosure.
+- `Dialog`: the guest login prompt and the "Forgot Password?" message.
 - `Sheet`: mobile navigation with focus management and Escape-to-close behavior.
+- `Accordion`: installed but not currently used by application code.
 
 For example:
 
@@ -139,10 +194,10 @@ import { Label } from "@/components/ui/label";
 <Button type="submit">Log In</Button>
 ```
 
-Add a component when a feature needs it:
+Add a component when a feature needs it, using the project's installed shadcn CLI:
 
 ```bash
-npx shadcn@latest add dialog
+npx shadcn add select
 ```
 
 `components.json` records the registry configuration. Shared colors live in
@@ -172,6 +227,14 @@ hosting setup with rate limiting and request-size policies.
 `BACKEND_API_URL` and `APP_ORIGIN` are server configuration. Do not put JWT signing
 secrets or provider keys in public frontend variables.
 
+### Differences from the assignment examples
+
+The assignment examples use Axios and store the token in `localStorage`. This
+frontend uses the shared `fetch` helpers (`apiRequest()` in the browser,
+`backendRequest()` on the server) and keeps the JWT in an HttpOnly cookie. Browser
+JavaScript cannot read that cookie, so injected scripts cannot steal the
+token. Routing uses the Next.js App Router, so React Router is not needed.
+
 ## Fetching data in future client components
 
 ```typescript
@@ -197,7 +260,12 @@ npm run build
 npm run start
 ```
 
-The starter also includes `npm run lint`.
+There is currently no `lint` script. ESLint, its configuration, and its packages
+were removed in the latest frontend update, so lint results cannot be reported
+until it is restored.
+
+`next dev` writes an `AGENTS.md` file in this folder with instructions for AI coding tools.
+Setting `agentRules: false` in `next.config.ts` turns this off.
 
 ## Frontend tests
 
@@ -209,6 +277,20 @@ npm run test:coverage
 npx playwright install chromium
 npm run test:integration
 ```
+
+Latest local results (Windows, Node.js 26.13.1, npm 12.2.3):
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | Passed |
+| `npm run build` | Passed |
+| `npm test` | 77 of 77 unit/component tests passed |
+| `npm run test:coverage` | **Fails the function threshold**: functions 44.21%, required 50% |
+| `npm run test:integration` | 14 of 14 passed (7 scenarios on desktop and mobile) |
+
+All tests pass, but the coverage command exits with an error because function
+coverage is below 50 percent. See [UNIT_TESTS.md](UNIT_TESTS.md#coverage) for the
+numbers and what still needs tests.
 
 Vitest uses mocked requests for unit/component tests. Playwright starts Next.js
 and the real FastAPI application on isolated test ports with a temporary database

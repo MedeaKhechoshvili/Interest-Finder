@@ -5,6 +5,7 @@ const origin = "http://localhost:3001";
 
 test("invalid credentials display the real backend error", async ({ page }) => {
   await page.goto("/login");
+  await expect(page.getByLabel("Email Address")).toBeEditable();
   await page.getByLabel("Email Address").fill(randomUUID() + "@example.com");
   await page.getByLabel("Password", { exact: true }).fill("incorrect-password");
   await page.getByRole("button", { name: "Log In", exact: true }).click();

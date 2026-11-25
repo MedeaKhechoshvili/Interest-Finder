@@ -17,7 +17,7 @@ export default async function RegisterPage(props: RegisterPageProps) {
   }
 
   return (
-    <main id="main" className="auth-main">
+    <main id="main" className="auth-main auth-main-register">
       <RegisterForm next={next} />
     </main>
   );

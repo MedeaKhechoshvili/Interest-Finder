@@ -1,6 +1,7 @@
 "use client";
 
 import { goToPage } from "@/lib/navigation";
+import { useHydrated } from "@/lib/use-hydrated";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -30,17 +31,13 @@ export default function RegisterForm(props: RegisterFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const hydrated = useHydrated();
+  const disabled = !hydrated || loading;
 
-  let passwordType = "password";
   let buttonText = "Sign Up";
   let errorMessage = null;
-
-  if (showPassword) {
-    passwordType = "text";
-  }
 
   if (loading) {
     buttonText = "Creating account...";
@@ -57,7 +54,7 @@ export default function RegisterForm(props: RegisterFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (loading) {
+    if (disabled) {
       return;
     }
 
@@ -121,131 +118,122 @@ export default function RegisterForm(props: RegisterFormProps) {
           <h1 id="register-title">Create Your Account</h1>
         </CardTitle>
         <CardDescription className="form-intro">
-          Begin your journey of analog pacing and elegant discovery.
+          <span className="desktop-copy">
+            Begin your journey of analog pacing and elegant discovery.
+          </span>
+          <span className="mobile-copy">
+            Begin a more intentional way to discover and keep track.
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} aria-busy={loading}>
-          <div className="form-field">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              name="full_name"
-              autoComplete="name"
-              placeholder="e.g. Eleanor Vance"
-              minLength={2}
-              maxLength={100}
-              value={name}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setName(event.target.value);
-              }}
-            />
-          </div>
+          <fieldset disabled={disabled} className="m-0 min-w-0 border-0 p-0">
+            <div className="form-field">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                name="full_name"
+                autoComplete="name"
+                placeholder="e.g. Eleanor Vance"
+                minLength={2}
+                maxLength={100}
+                value={name}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setName(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="form-field">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@domain.com"
-              maxLength={254}
-              value={email}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setEmail(event.target.value);
-              }}
-            />
-          </div>
+            <div className="form-field">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="eleanor@vance.com"
+                maxLength={254}
+                value={email}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setEmail(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="form-field">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type={passwordType}
-              autoComplete="new-password"
-              placeholder="Create a secure password"
-              minLength={8}
-              maxLength={128}
-              aria-describedby="password-help"
-              value={password}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setPassword(event.target.value);
-              }}
-            />
-            <p className="field-help" id="password-help">
-              Use 8 to 128 characters.
-            </p>
-          </div>
+            <div className="form-field">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Create a secure password"
+                minLength={8}
+                maxLength={128}
+                value={password}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setPassword(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="form-field">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
-            <Input
-              id="confirm-password"
-              name="confirm_password"
-              type={passwordType}
-              autoComplete="new-password"
-              placeholder="Repeat your password"
-              maxLength={128}
-              value={confirmPassword}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setConfirmPassword(event.target.value);
-              }}
-            />
-          </div>
+            <div className="form-field">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                name="confirm_password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat your password"
+                maxLength={128}
+                value={confirmPassword}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setConfirmPassword(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="checkbox-row">
-            <Checkbox
-              id="show-password"
-              checked={showPassword}
-              disabled={loading}
-              onCheckedChange={function (checked) {
-                if (checked === true) {
-                  setShowPassword(true);
-                } else {
-                  setShowPassword(false);
-                }
-              }}
-            />
-            <Label htmlFor="show-password">Show passwords</Label>
-          </div>
+            <div className="checkbox-row">
+              <Checkbox
+                id="terms"
+                name="terms_accepted"
+                checked={termsAccepted}
+                required
+                disabled={disabled}
+                onCheckedChange={function (checked) {
+                  if (checked === true) {
+                    setTermsAccepted(true);
+                  } else {
+                    setTermsAccepted(false);
+                  }
+                }}
+              />
+              <Label htmlFor="terms" className="terms-label">
+                <span>
+                  I agree to the <Link href="/terms">Terms of Service</Link> and{" "}
+                  <Link href="/privacy">Privacy Policy</Link> of InterestFinder.
+                </span>
+              </Label>
+            </div>
 
-          <div className="checkbox-row">
-            <Checkbox
-              id="terms"
-              name="terms_accepted"
-              checked={termsAccepted}
-              required
-              disabled={loading}
-              onCheckedChange={function (checked) {
-                if (checked === true) {
-                  setTermsAccepted(true);
-                } else {
-                  setTermsAccepted(false);
-                }
-              }}
-            />
-            <Label htmlFor="terms" className="terms-label">
-              <span>
-                I agree to the <Link href="/terms">Terms of Service</Link> and{" "}
-                <Link href="/privacy">Privacy Policy</Link> of InterestFinder.
-              </span>
-            </Label>
-          </div>
-
-          {errorMessage}
-          <Button type="submit" className="primary-button" disabled={loading}>
-            {buttonText}
-          </Button>
+            {errorMessage}
+            <Button
+              type="submit"
+              className="primary-button"
+              disabled={disabled}
+            >
+              {buttonText}
+            </Button>
+          </fieldset>
         </form>
       </CardContent>
       <CardFooter>
