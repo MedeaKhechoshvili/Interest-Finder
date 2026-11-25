@@ -1,5 +1,7 @@
 "use client";
 
+import { goToPage } from "@/lib/navigation";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,7 +39,7 @@ export default function LogoutButton() {
       }
 
       // a new page request also clears old account information from the screen
-      window.location.replace("/login");
+      goToPage("/login");
     } catch {
       setError("Could not connect. Please try again.");
       setLoading(false);

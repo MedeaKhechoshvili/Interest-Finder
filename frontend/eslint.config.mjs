@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // these files are created by next
     ".next/**",
+    ".next-integration/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

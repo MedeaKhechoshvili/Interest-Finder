@@ -1,5 +1,7 @@
 "use client";
 
+import { goToPage } from "@/lib/navigation";
+
 import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -102,9 +104,7 @@ export default function RegisterForm(props: RegisterFormProps) {
       }
 
       // registration creates the account but does not log the user in
-      window.location.replace(
-        "/login?registered=1&next=" + encodeURIComponent(props.next),
-      );
+      goToPage("/login?registered=1&next=" + encodeURIComponent(props.next));
     } catch {
       setError("Could not connect. Please try again.");
       setLoading(false);

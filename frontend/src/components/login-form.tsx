@@ -1,5 +1,7 @@
 "use client";
 
+import { goToPage } from "@/lib/navigation";
+
 import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -103,7 +105,7 @@ export default function LoginForm(props: LoginFormProps) {
       }
 
       // reload the page so the server reads the new session cookie
-      window.location.replace(props.next);
+      goToPage(props.next);
     } catch {
       setError("Could not connect. Please try again.");
       setLoading(false);
