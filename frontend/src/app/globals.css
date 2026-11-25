@@ -33,25 +33,25 @@
 
 :root {
   color-scheme: light;
-  --cream: #fbf5eb;
-  --green: #193d30;
-  --background: #fbf5eb;
-  --foreground: #193d30;
-  --card: #f9f2e7;
-  --card-foreground: #193d30;
-  --popover: #fbf5eb;
-  --popover-foreground: #193d30;
-  --primary: #193d30;
-  --primary-foreground: #fbf5eb;
+  --cream: #fdf6ec;
+  --green: #1b3a2d;
+  --background: #fdf6ec;
+  --foreground: #1b3a2d;
+  --card: #faf3e8;
+  --card-foreground: #1b3a2d;
+  --popover: #fdf6ec;
+  --popover-foreground: #1b3a2d;
+  --primary: #1b3a2d;
+  --primary-foreground: #ffffff;
   --secondary: #ede9dc;
-  --secondary-foreground: #193d30;
+  --secondary-foreground: #1b3a2d;
   --muted: #ede9dc;
   --muted-foreground: #655e53;
   --accent: #ede9dc;
-  --accent-foreground: #193d30;
+  --accent-foreground: #1b3a2d;
   --destructive: #a52b29;
   --input: #e5d8c4;
-  --ring: #193d30;
+  --ring: #1b3a2d;
   --radius: 1rem;
   --border: #e5d8c4;
 }
@@ -84,8 +84,14 @@ button:disabled {
   cursor: wait;
   opacity: 0.65;
 }
-a {
-  color: inherit;
+@layer base {
+  a {
+    color: inherit;
+  }
+}
+/* keep filled buttons readable when they render as links */
+[data-slot="button"][data-variant="default"] {
+  color: var(--primary-foreground);
 }
 a:hover {
   text-decoration: underline;
@@ -118,11 +124,11 @@ h1 {
 .header-content {
   width: 90%;
   max-width: 1280px;
-  min-height: 88px;
+  min-height: 87px;
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
 }
 .brand {
@@ -130,7 +136,7 @@ h1 {
   align-items: center;
   gap: 10px;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: bold;
   text-decoration: none;
 }
@@ -152,32 +158,58 @@ h1 {
 .site-navigation a {
   padding: 12px 0;
 }
-.site-navigation .nav-signup,
+.account-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 32px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.account-navigation .nav-signup,
 .mobile-menu .nav-signup {
   min-height: 44px;
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 32px;
 }
 .mobile-navigation {
   display: none;
 }
 .menu-button {
+  width: 44px;
   min-height: 44px;
-  padding: 8px 16px;
+  padding: 8px;
+}
+.menu-button svg {
+  width: 24px;
+  height: 24px;
 }
 .auth-main {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 75vh;
-  padding: 64px 20px 80px;
+  justify-content: center;
+  padding: 80px 20px 100px;
+}
+.auth-main-register {
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+.auth-reassurance,
+.mobile-copy {
+  display: none;
 }
 .auth-card {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 44px;
+  padding: 48px;
   gap: 0;
   overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 10px 24px rgb(27 58 45 / 4%);
+  --tw-ring-shadow: 0 0 #0000;
 }
 .auth-card [data-slot="card-header"],
 .auth-card [data-slot="card-content"],
@@ -227,7 +259,9 @@ form {
 .form-field [data-slot="input"] {
   min-height: 48px;
   background: white;
-  font-size: 1rem;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
 }
 .form-field input::placeholder {
   color: var(--muted-foreground);
@@ -266,7 +300,20 @@ form {
 }
 .primary-button {
   width: 100%;
+  min-height: 46px;
   margin-top: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.auth-main-login form {
+  margin-top: 24px;
+}
+.auth-main-login .form-field:last-of-type {
+  margin-bottom: 8px;
+}
+.auth-card .form-switch a,
+.auth-card .checkbox-row a {
+  text-decoration: none;
 }
 
 .form-error,
@@ -285,23 +332,13 @@ form {
 .form-notice {
   background: #edf1e7;
 }
-.field-help,
 .password-help {
   color: var(--muted-foreground);
   font-size: 0.875rem;
   line-height: 1.6;
 }
-.field-help {
-  margin-top: 8px;
-}
-.password-help {
-  margin: 20px 0;
-}
-.password-help p {
-  margin-top: 12px;
-}
 .form-switch {
-  margin-top: 28px;
+  margin-top: 32px;
   color: var(--muted-foreground);
   font-size: 0.875rem;
   line-height: 1.6;
@@ -334,7 +371,7 @@ form {
   text-decoration: underline;
 }
 .site-footer {
-  padding: 48px 5% 28px;
+  padding: 80px 5% 48px;
   background: var(--green);
   color: var(--cream);
 }
@@ -346,19 +383,33 @@ form {
   margin: 0 auto;
 }
 .footer-content p {
-  max-width: 400px;
-  margin-top: 20px;
+  max-width: 360px;
+  margin-top: 16px;
   font-size: 0.875rem;
-  line-height: 1.8;
+  line-height: 1.5;
 }
 .site-footer .brand-icon {
   background: #98b28d;
   color: var(--green);
 }
-.site-footer nav {
+.footer-columns {
+  width: 384px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+}
+.footer-columns h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 20px;
+  font-weight: bold;
+}
+.site-footer nav,
+.footer-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   font-size: 0.875rem;
 }
 .site-footer :focus-visible {
@@ -366,25 +417,28 @@ form {
 }
 .copyright {
   max-width: 1280px;
-  margin: 40px auto 0;
+  margin: 48px auto 0;
   padding-top: 24px;
   border-top: 1px solid #ffffff30;
-  color: #b0c6a7;
-  font-size: 0.875rem;
+  color: #98b28d;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
 /* smaller screens use the shadcn sheet menu */
 @media (max-width: 760px) {
   .header-content {
-    flex-wrap: wrap;
+    display: flex;
+    justify-content: space-between;
+    min-height: 68px;
     gap: 16px;
-    padding: 20px 0;
+    padding: 0;
   }
   .mobile-navigation {
     display: block;
   }
-  .site-navigation {
+  .site-navigation,
+  .account-navigation {
     display: none;
   }
 
@@ -394,27 +448,156 @@ form {
   .footer-content {
     flex-direction: column;
   }
-  .site-footer nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 24px;
+  .footer-columns {
+    width: 100%;
+    gap: 20px;
+  }
+  .site-footer {
+    padding-top: 40px;
   }
 }
 
 @media (max-width: 480px) {
+  :root {
+    --green: #173f31;
+    --primary: #173f31;
+    --foreground: #173f31;
+    --card: #f7eedf;
+  }
   .auth-main {
-    min-height: auto;
-    padding: 32px 16px 48px;
+    min-height: calc(100svh - 68px);
+    padding: 20px 16px 32px;
+    gap: 20px;
+  }
+  .auth-main-register {
+    justify-content: flex-start;
   }
   .auth-card {
-    padding: 28px 20px;
-    border-radius: 20px;
+    padding: 28px 22px;
+    border-radius: 24px;
+  }
+  .auth-card [data-slot="card-header"] {
+    gap: 0;
+  }
+  .auth-main-login .form-logo {
+    width: 46px;
+    height: 46px;
+    margin-bottom: 12px;
+  }
+  .auth-main-register .auth-card {
+    padding-top: 20px;
+    padding-bottom: 14px;
+  }
+  .auth-main-register .form-logo {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 8px;
+  }
+  .auth-main-register h1 {
+    font-size: 26px;
+  }
+  .form-intro {
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .auth-main-register .form-intro {
+    margin-top: 8px;
+  }
+  .auth-main-register form {
+    margin-top: 20px;
+  }
+  .form-field {
+    margin-bottom: 16px;
+  }
+  .form-field label {
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .form-field [data-slot="input"] {
+    min-height: 50px;
+    padding: 12px;
+  }
+  .auth-main-register .checkbox-row {
+    gap: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .auth-main-register .checkbox-row label {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .auth-main-register .checkbox-row {
+    margin-bottom: 8px;
+  }
+  .auth-main-register .primary-button {
+    margin-top: 8px;
+  }
+  .auth-main-register .form-switch {
+    margin-top: 14px;
+  }
+  .auth-main-login {
+    padding-top: 26px;
+    padding-bottom: 20px;
+  }
+  .auth-main-login .auth-card {
+    padding-bottom: 22px;
+  }
+  .auth-main-login .password-help {
+    margin-bottom: 3px;
+  }
+  .auth-main-login .form-switch {
+    margin-top: 24px;
+  }
+  .auth-main-login .form-field {
+    margin-bottom: 20px;
+  }
+  .auth-main-login .form-field + .form-field {
+    margin-bottom: 8px;
+  }
+  .auth-main-register .checkbox-row [data-slot="checkbox"] {
+    width: 13px;
+    height: 13px;
+  }
+  .form-switch {
+    margin-top: 20px;
+    font-size: 13px;
+  }
+  .primary-button {
+    min-height: 50px;
+    font-size: 14px;
+  }
+  .auth-reassurance {
+    display: block;
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #88a783;
+  }
+  .desktop-copy {
+    display: none;
+  }
+  .mobile-copy {
+    display: inline;
+  }
+  body:has(.auth-main) .site-footer {
+    display: none;
+  }
+  body:has(.auth-main-register) .header-content {
+    visibility: hidden;
   }
   h1 {
     font-size: 1.75rem;
   }
+  .header-content {
+    width: calc(100% - 32px);
+  }
   .brand {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
+  }
+  .brand-icon {
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -438,11 +621,17 @@ form {
   min-width: 44px;
   min-height: 44px;
 }
-.password-help [data-slot="accordion-item"] {
-  border: 0;
+.password-help {
+  display: flex;
+  justify-content: flex-end;
+  margin: 4px 0 10px;
 }
-.password-help [data-slot="accordion-trigger"] {
-  min-height: 44px;
+.password-help .forgot-password {
+  height: auto;
+  padding: 0;
+  color: #536e61;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -450,5 +639,133 @@ form {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* shared guest login prompt */
+[data-slot="dialog-overlay"] {
+  background: rgb(25 61 48 / 65%);
+}
+.auth-prompt {
+  width: calc(100% - 32px);
+  max-width: 532px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  gap: 0;
+  padding: 44px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--cream);
+  color: var(--green);
+  text-align: center;
+  box-shadow: none;
+}
+.auth-prompt-logo {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--cream);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: bold;
+}
+.auth-prompt-title {
+  margin: 0 0 22px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+.auth-prompt-description {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.auth-prompt-actions {
+  display: grid;
+  gap: 12px;
+  margin: 30px 0;
+}
+.auth-prompt-actions a {
+  min-height: 52px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  text-decoration: none;
+  white-space: normal;
+}
+.auth-prompt-register {
+  border: 2px solid var(--green);
+}
+.auth-prompt-login {
+  background: var(--green);
+  color: var(--cream);
+}
+.auth-prompt-footer {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #536e61;
+}
+.auth-prompt [data-slot="dialog-close"] {
+  top: 26px;
+  right: 26px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: white;
+}
+@media (max-width: 540px) {
+  .auth-prompt {
+    padding: 44px 24px 32px;
+    border-radius: 24px;
+  }
+  .auth-prompt-title {
+    font-size: 28px;
+  }
+}
+
+.auth-card .checkbox-row [data-slot="checkbox"] {
+  background: white;
+}
+.auth-card .checkbox-row [data-slot="checkbox"][data-state="checked"] {
+  background: var(--green);
+  color: white;
+}
+
+@media (min-width: 481px) {
+  .auth-main-login .form-switch {
+    margin-top: 28px;
+  }
+  .auth-main-register .checkbox-row {
+    margin-top: 24px;
+  }
+  .auth-main-register .checkbox-row label {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .auth-main-register .form-switch {
+    margin-top: 24px;
+  }
+  .auth-main-register .form-logo {
+    margin-bottom: 12px;
+  }
+  .auth-main-register .form-intro {
+    max-width: 340px;
+    margin: 12px auto 0;
+    line-height: 1.3;
+  }
+  .auth-main-register form {
+    margin-top: 26px;
+  }
+  .auth-main-register .form-field {
+    margin-bottom: 19px;
+  }
+  .auth-main-register .form-field [data-slot="input"] {
+    min-height: 46px;
   }
 }

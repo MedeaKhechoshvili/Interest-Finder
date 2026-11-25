@@ -1,3 +1,5 @@
+import { goToPage } from "@/lib/navigation";
+
 // feature pages can use this function without reading the session cookie
 export async function apiRequest(path: string, method = "GET", data?: object) {
   if (!path.startsWith("/") || path.startsWith("//")) {
@@ -19,9 +21,7 @@ export async function apiRequest(path: string, method = "GET", data?: object) {
 
   if (response.status === 401) {
     const currentPage = window.location.pathname + window.location.search;
-    window.location.replace(
-      "/login?expired=1&next=" + encodeURIComponent(currentPage),
-    );
+    goToPage("/login?expired=1&next=" + encodeURIComponent(currentPage));
     throw new Error("Please log in to continue.");
   }
 

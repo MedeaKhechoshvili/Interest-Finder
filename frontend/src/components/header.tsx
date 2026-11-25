@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,6 +20,11 @@ interface HeaderProps {
 export default function Header(props: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  let listsLink = null;
   let accountLinks = (
     <>
       <Link href="/login" onClick={closeMenu}>
@@ -33,6 +39,11 @@ export default function Header(props: HeaderProps) {
   );
 
   if (props.signedIn) {
+    listsLink = (
+      <Link href="/my-lists" onClick={closeMenu}>
+        My Lists
+      </Link>
+    );
     accountLinks = (
       <Button asChild className="nav-signup">
         <Link href="/account" onClick={closeMenu}>
@@ -40,10 +51,6 @@ export default function Header(props: HeaderProps) {
         </Link>
       </Button>
     );
-  }
-
-  function closeMenu() {
-    setMenuOpen(false);
   }
 
   return (
@@ -55,19 +62,25 @@ export default function Header(props: HeaderProps) {
           </span>
           <span>InterestFinder</span>
         </Link>
-
         <nav className="site-navigation" aria-label="Main navigation">
           <Link href="/">Home</Link>
           <Link href="/discover">Discover</Link>
-          <Link href="/my-lists">My Lists</Link>
+          {listsLink}
+        </nav>
+        <nav className="account-navigation" aria-label="Account navigation">
           {accountLinks}
         </nav>
-
         <div className="mobile-navigation">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
-              <Button type="button" variant="outline" className="menu-button">
-                Menu
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="menu-button"
+                aria-label="Menu"
+              >
+                <MenuIcon aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent className="mobile-sheet">
@@ -84,9 +97,7 @@ export default function Header(props: HeaderProps) {
                 <Link href="/discover" onClick={closeMenu}>
                   Discover
                 </Link>
-                <Link href="/my-lists" onClick={closeMenu}>
-                  My Lists
-                </Link>
+                {listsLink}
                 {accountLinks}
               </nav>
             </SheetContent>

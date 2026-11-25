@@ -1,5 +1,8 @@
 "use client";
 
+import { goToPage } from "@/lib/navigation";
+import { useHydrated } from "@/lib/use-hydrated";
+
 import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -7,7 +10,6 @@ import type { FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardHeader,
@@ -18,11 +20,12 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface LoginFormProps {
   next: string;
@@ -33,18 +36,14 @@ interface LoginFormProps {
 export default function LoginForm(props: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const hydrated = useHydrated();
+  const disabled = !hydrated || loading;
 
-  let passwordType = "password";
   let buttonText = "Log In";
   let errorMessage = null;
   let statusMessage = null;
-
-  if (showPassword) {
-    passwordType = "text";
-  }
 
   if (loading) {
     buttonText = "Logging in...";
@@ -79,7 +78,7 @@ export default function LoginForm(props: LoginFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (loading) {
+    if (disabled) {
       return;
     }
 
@@ -103,7 +102,7 @@ export default function LoginForm(props: LoginFormProps) {
       }
 
       // reload the page so the server reads the new session cookie
-      window.location.replace(props.next);
+      goToPage(props.next);
     } catch {
       setError("Could not connect. Please try again.");
       setLoading(false);
@@ -126,72 +125,74 @@ export default function LoginForm(props: LoginFormProps) {
       <CardContent>
         {statusMessage}
         <form onSubmit={handleSubmit} aria-busy={loading}>
-          <div className="form-field">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              maxLength={254}
-              placeholder="you@domain.com"
-              value={email}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setEmail(event.target.value);
-              }}
-            />
-          </div>
+          <fieldset disabled={disabled} className="m-0 min-w-0 border-0 p-0">
+            <div className="form-field">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                maxLength={254}
+                placeholder="you@domain.com"
+                value={email}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setEmail(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="form-field">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type={passwordType}
-              autoComplete="current-password"
-              maxLength={128}
-              placeholder="Enter your secure password"
-              value={password}
-              required
-              disabled={loading}
-              onChange={function (event) {
-                setPassword(event.target.value);
-              }}
-            />
-          </div>
+            <div className="form-field">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                maxLength={128}
+                placeholder="Enter your secure password"
+                value={password}
+                required
+                disabled={disabled}
+                onChange={function (event) {
+                  setPassword(event.target.value);
+                }}
+              />
+            </div>
 
-          <div className="checkbox-row">
-            <Checkbox
-              id="show-password"
-              checked={showPassword}
-              disabled={loading}
-              onCheckedChange={function (checked) {
-                if (checked === true) {
-                  setShowPassword(true);
-                } else {
-                  setShowPassword(false);
-                }
-              }}
-            />
-            <Label htmlFor="show-password">Show password</Label>
-          </div>
+            <div className="password-help">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="forgot-password"
+                    disabled={disabled}
+                  >
+                    Forgot Password?
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogTitle>Password assistance</DialogTitle>
+                  <DialogDescription>
+                    Password reset is not available yet. Please contact your
+                    administrator for help.
+                  </DialogDescription>
+                </DialogContent>
+              </Dialog>
+            </div>
 
-          <Accordion type="single" collapsible className="password-help">
-            <AccordionItem value="password-help">
-              <AccordionTrigger>Forgot Password?</AccordionTrigger>
-              <AccordionContent>
-                Password reset is not available yet. You can register a new test
-                account with another email.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          {errorMessage}
-          <Button type="submit" className="primary-button" disabled={loading}>
-            {buttonText}
-          </Button>
+            {errorMessage}
+            <Button
+              type="submit"
+              className="primary-button"
+              disabled={disabled}
+            >
+              {buttonText}
+            </Button>
+          </fieldset>
         </form>
       </CardContent>
       <CardFooter>
