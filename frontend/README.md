@@ -79,10 +79,10 @@ build output, caches, and private environment files out of commits.
 - A small backend proxy and browser API helper for future feature pages.
 - Basic loading, error, and missing-page screens.
 
-Home currently redirects to login. Discover and My Lists are placeholders, just
-like the first frontend. Detail, discovery, saved-list cards, and review screens
-are still the other feature owners' work. Terms and privacy text are provisional
-project copy.
+Home currently redirects to login. My Lists is a protected page that displays
+saved catalog items in Planned and Completed lists and supports status changes
+and removal. Discover and Item Detail integrations are still handled by their
+respective feature owners. Terms and privacy text are provisional project copy.
 
 ## Where to read the code
 
@@ -184,10 +184,11 @@ const savedItem = await apiRequest("/saved-items/", "POST", {
 });
 ```
 
-Search results can have a null local ID. Open `/items/books/{external_id}` to
-store a book before saving it. Saved-item IDs, review IDs, and local catalog IDs
-are different. Saved lists currently contain IDs and timestamps, not full item
-cards; that backend response contract still needs to be extended for My Lists.
+Search results can have a null local ID. Open `/items/{category}/{external_id}` to
+store an item before saving it. Saved-item IDs, review IDs, and local catalog IDs
+are different. The saved-items response includes a nested `catalog_item` summary
+for rendering the My Lists cards. The shared Save Button resolves a missing local
+ID through the catalog Detail endpoint and sends only the internal numeric ID.
 
 ## Build and check types
 
