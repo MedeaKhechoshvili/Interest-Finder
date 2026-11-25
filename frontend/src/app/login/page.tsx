@@ -24,8 +24,9 @@ export default async function LoginPage(props: LoginPageProps) {
   const expired = params.expired === "1";
 
   return (
-    <main id="main" className="auth-main">
+    <main id="main" className="auth-main auth-main-login">
       <LoginForm next={next} registered={registered} expired={expired} />
+      <p className="auth-reassurance">Your lists and reviews stay yours.</p>
     </main>
   );
 }
