@@ -1,6 +1,6 @@
 # InterestFinder frontend
 
-The Next.js frontend for InterestFinder uses TypeScript, Tailwind CSS, and shadcn/ui. Frontend files live in `frontend/`; the FastAPI backend lives in the repository root's `src/` directory. Forms use separate, readable components. An automated frontend test suite has not been added yet.
+The Next.js frontend for InterestFinder uses TypeScript, Tailwind CSS, and shadcn/ui. Frontend files live in `frontend/`; the FastAPI backend lives in the repository root's `src/` directory. Forms use separate, readable components. Vitest unit/component tests and Playwright integration tests are included.
 
 This project was created with the official starter:
 
@@ -197,5 +197,25 @@ npm run build
 npm run start
 ```
 
-The starter also includes `npm run lint`. No test commands or Docker files were
-added to this folder.
+The starter also includes `npm run lint`.
+
+## Frontend tests
+
+Run from `frontend/`:
+
+```bash
+npm test
+npm run test:coverage
+npx playwright install chromium
+npm run test:integration
+```
+
+Vitest uses mocked requests for unit/component tests. Playwright starts Next.js
+and the real FastAPI application on isolated test ports with a temporary database
+and generated test credentials. The authentication UI is exercised in a browser;
+saving, completion, and reviews currently use the real Next.js API proxy because
+those feature screens are not implemented yet.
+
+See [unit tests and coverage](UNIT_TESTS.md), [integration setup](INTEGRATION_TESTS.md),
+and [team test ownership](tests/README.md) for requirements, evidence, and commands.
+Generated coverage, Playwright reports, traces, and screenshots are ignored by Git.
