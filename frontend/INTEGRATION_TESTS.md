@@ -5,25 +5,25 @@ Commands below use that location. Backend commands run from the repository root.
 
 ## One-time backend setup
 
-From the repository root, use Python 3.11 or newer:
+Install [uv](https://docs.astral.sh/uv/) first (see the
+[root README](../README.md#local-setup-with-uv)). Then, from the repository root:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+uv sync
 cp -n .env.example .env
-.venv/bin/python -c "import secrets; print(secrets.token_urlsafe(32))"
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Put the generated secret into `JWT_SECRET_KEY` in the root `.env`. Keep any
-existing configured environment file. If your backend environment is already
-installed, use it instead of creating another one.
+`uv sync` creates `.venv` with the exact package versions from `uv.lock`. Put the
+generated secret into `JWT_SECRET_KEY` in the root `.env`. Keep any existing
+configured environment file.
 
 ## Run the app normally
 
 Terminal 1, from the repository root:
 
 ```bash
-.venv/bin/python -m uvicorn app.main:app --reload --app-dir src
+uv run uvicorn app.main:app --reload --app-dir src
 ```
 
 API documentation: http://localhost:8000/docs
@@ -70,7 +70,8 @@ refuse to reuse an existing server to avoid modifying another database.
 
 The runner finds the backend repository by looking for `src/app/main.py`. Keep
 the frontend inside that repository. It detects `venv` and `.venv` Python
-executables on Linux/macOS and Windows. To select a different environment:
+executables on Linux/macOS and Windows, including the `.venv` created by
+`uv sync`. To select a different environment:
 
 ```bash
 TEST_PYTHON=/absolute/path/to/python npm run test:integration
@@ -80,19 +81,18 @@ For an already installed compatible Chromium browser, you can set
 `PLAYWRIGHT_EXECUTABLE_PATH` to its executable path. Otherwise Playwright uses
 the Chromium browser installed by the command above.
 
-On Windows PowerShell, from the repository root, create and install the backend
-environment if one is not already configured:
+On Windows PowerShell, from the repository root, install the backend
+environment if it is not already set up:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+uv sync
 ```
 
 For normal backend development, follow the root README for first-time `.env`
 configuration. To start the configured normal backend, from the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir src
+uv run uvicorn app.main:app --reload --app-dir src
 ```
 
 For Playwright checks, from the repository root:

@@ -37,26 +37,53 @@ Work is organized through GitHub Issues, milestones, and the Interest Finder Pro
 
 The backend uses FastAPI, SQLAlchemy, SQLite, Pydantic, and JWT authentication. It implements registration/login, public catalog discovery and details, personal planned/completed items, and public ratings/reviews. Routes are under `/api/v1`.
 
-### Local setup (Windows PowerShell)
+### Local setup with uv
 
-Run these commands in the repository folder. Using the virtual environment's Python directly avoids PowerShell activation-policy problems.
+The backend uses [uv](https://docs.astral.sh/uv/) to manage Python and its packages. `pyproject.toml` lists the dependencies, and `uv.lock` pins their exact versions. Python 3.11 or newer is required.
+
+Install uv once. On Windows:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
-.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+winget install --id=astral-sh.uv -e
 ```
 
-Copy the generated value into `JWT_SECRET_KEY` in your private `.env`. Only copy `.env.example` when first setting up: do not overwrite an existing configured `.env`. Never commit `.env`, tokens, passwords, or SQLite database files.
+On macOS/Linux:
 
-On macOS/Linux, use `python3 -m venv .venv`, `.venv/bin/python -m pip install -r requirements.txt`, and `cp .env.example .env`; use `.venv/bin/python` for the remaining Python commands. An alternative installation is `python -m pip install -e ".[dev]"` inside an activated environment. Python 3.11 or newer is required.
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Open a new terminal afterward so the `uv` command is available. Then run these commands in the repository folder:
+
+```powershell
+uv sync
+Copy-Item .env.example .env
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+`uv sync` creates `.venv` and installs the exact versions from `uv.lock`, including the test tools. On macOS/Linux, use `cp .env.example .env` instead of `Copy-Item`.
+
+Copy the generated value into `JWT_SECRET_KEY` in your private `.env`. Only copy `.env.example` when first setting up: do not overwrite an existing configured `.env`. Never commit `.env`, tokens, passwords, or SQLite database files.
 
 Start the server:
 
 ```powershell
+uv run uvicorn app.main:app --reload --app-dir src
+```
+
+`uv run` runs a command inside the project's environment, so there is no need to activate `.venv` first.
+
+#### Without uv
+
+`requirements.txt` remains available as an alternative. It lists version ranges, so installed versions can differ from `uv.lock`.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir src
 ```
+
+On macOS/Linux, use `python3 -m venv .venv` and `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`.
 
 - Swagger UI: <http://localhost:8000/docs>
 - ReDoc: <http://localhost:8000/redoc>
@@ -94,20 +121,22 @@ The catalog item ID, saved-item ID, review ID, and user ID are different identif
 ### Tests and API specification
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe scripts/export_openapi.py --check
+uv run pytest -q
+uv run python scripts/export_openapi.py --check
 ```
 
-The final verification run recorded **228 passed**, with one dependency deprecation warning from Starlette's use of `httpx`. This run used Python 3.12 on Linux; rerun on your own environment after installing dependencies. The tests use isolated databases, generated test JWT secrets, and mocked providers. Coverage includes the full registration → login → save → complete → review workflow, access control, error cases, provider behavior, and OpenAPI validation.
+The latest run used uv 0.13.10 with Python 3.14.7 on Windows. It recorded **228 passed**, with one dependency deprecation warning from Starlette's use of `httpx`, and `openapi.yaml matches the application.` The earlier verification run with Python 3.12 on Linux also recorded 228 passed. Rerun on your own environment after installing dependencies. The tests use isolated databases, generated test JWT secrets, and mocked providers. Coverage includes the full registration → login → save → complete → review workflow, access control, error cases, provider behavior, and OpenAPI validation.
 
 `openapi.yaml` describes the implemented API and can be imported into Swagger Editor. After changing routes or schemas, regenerate and retest:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/export_openapi.py
-.\.venv\Scripts\python.exe -m pytest -q
+uv run python scripts/export_openapi.py
+uv run pytest -q
 ```
 
-The export command reads the application schema without starting Uvicorn or initializing a database. Tests validate the YAML and compare it with the application's generated schema. Dependency upgrades may change the generated schema; review the diff before committing it. `uv.lock` is included for teams using uv.
+The export command reads the application schema without starting Uvicorn or initializing a database. Tests validate the YAML and compare it with the application's generated schema. Dependency upgrades may change the generated schema; review the diff before committing it.
+
+To check that `uv.lock` still matches `pyproject.toml` without changing it, run `uv lock --check`. After changing dependencies in `pyproject.toml`, run `uv lock` and commit the updated `uv.lock`.
 
 See [Backend verification and contract comparison](docs/backend-verification.md) for issue #25 evidence, known limitations, and differences from the original design. Success response shapes currently differ between route groups; clients should follow `openapi.yaml`. Errors use a shared envelope with a top-level request ID.
 
