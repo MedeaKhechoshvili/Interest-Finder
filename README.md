@@ -1,4 +1,3 @@
-
 # InterestFinder
 
 COMPE 561 term project for discovering and organizing interests across movies, books, music, and attractions.
@@ -20,7 +19,7 @@ Users can organize saved items into planned and completed lists. Completed items
 
 ## Design Direction
 
-The interface follows a forest-green and cream editorial visual identity. The desktop and responsive mobile designs were created in Figma and will guide the Next.js implementation.
+The interface follows a forest-green and cream editorial visual identity. The desktop and responsive mobile designs were created in Figma and guide the Next.js implementation.
 
 ## Development Plan
 
@@ -96,7 +95,7 @@ The `/` path has no route and returns 404. Startup creates registered tables in 
 ### Provider configuration
 
 | Category | Adapter | Private `.env` configuration |
-| --- | --- | --- |
+|---|---|---|
 | Movies | TMDB | `TMDB_ACCESS_TOKEN` |
 | Books | Google Books | `GOOGLE_BOOKS_API_KEY`; leave empty if testing without a key, rather than sending the example placeholder |
 | Music | MusicBrainz | `MUSICBRAINZ_USER_AGENT`; no API key used by this adapter |
@@ -121,12 +120,16 @@ The catalog item ID, saved-item ID, review ID, and user ID are different identif
 
 ### Tests and API specification
 
+From the repository root:
+
 ```powershell
 uv run pytest -q
 uv run python scripts/export_openapi.py --check
 ```
 
-The latest run used uv 0.13.10 with Python 3.14.7 on Windows. It recorded **228 passed**, with one dependency deprecation warning from Starlette's use of `httpx`, and `openapi.yaml matches the application.` The earlier verification run with Python 3.12 on Linux also recorded 228 passed. Rerun on your own environment after installing dependencies. The tests use isolated databases, generated test JWT secrets, and mocked providers. Coverage includes the full registration → login → save → complete → review workflow, access control, error cases, provider behavior, and OpenAPI validation.
+The latest reported backend run completed with **236 passed and 1 warning**. The warning is a Starlette deprecation notice about its current `httpx` test-client integration; it did not fail the suite. The OpenAPI check also passed: `openapi.yaml matches the application.` The tests use isolated databases, generated test JWT secrets, and mocked providers. Coverage includes authentication, catalog behavior, saved-item workflows, access control, error cases, provider behavior, and OpenAPI validation. Rerun the checks in your own environment after installing dependencies.
+
+The latest reported frontend run completed **228 unit/component tests across 16 test files**. The My Lists test files account for 37 tests. The latest overall frontend coverage was 81.31% statements, 82.64% branches, 72.30% functions, and 81.64% lines, all above the configured 50% minimum. Frontend typechecking and the production build also passed. The frontend package currently has no `lint` script, so lint is not part of these reported checks.
 
 `openapi.yaml` describes the implemented API and can be imported into Swagger Editor. After changing routes or schemas, regenerate and retest:
 
@@ -145,7 +148,10 @@ See [Backend verification and contract comparison](docs/backend-verification.md)
 
 Include source code, tests, `requirements.txt`, `pyproject.toml`, `uv.lock`, this README, `openapi.yaml`, and the verification report in the submission ZIP. Exclude `.venv`, `.env`, database files, caches, and Git metadata. `requirements.txt` lists dependencies; the virtual environment itself is not a submission artifact.
 
-## Frontend foundation
+## Frontend
 
-The Next.js frontend lives in [`frontend/`](frontend/README.md) and uses TypeScript, shadcn/ui, and Tailwind CSS. It includes login, registration, logout, a protected account page, shared navigation/layout, a guest login prompt, and a server-side API proxy to FastAPI. Home currently redirects to login; My Lists is implemented on the feature branch; Discover remains a placeholder and the Detail page remains to be implemented. The merged review components are intended to be shown on the Detail page. See the [frontend README](frontend/README.md) for setup instructions and current limitations, [TESTING.md](TESTING.md) for repository-wide test commands and manual My Lists checks, [UNIT_TESTS.md](frontend/UNIT_TESTS.md) and [INTEGRATION_TESTS.md](frontend/INTEGRATION_TESTS.md) for frontend testing details, and the [frontend work division](frontend/InterestFinder_Frontend_Role_Division.md) for feature ownership. My Lists implementation details are documented in [docs/my-lists-implementation.md](docs/my-lists-implementation.md). Third-party UI license notices are in [frontend/THIRD_PARTY_NOTICES.md](frontend/THIRD_PARTY_NOTICES.md).
-The Next.js frontend lives in [`frontend/`](frontend/README.md) and uses TypeScript, shadcn/ui, and Tailwind CSS. It includes login, registration, logout, a protected account page, shared navigation/layout, a guest login prompt, and a server-side API proxy to FastAPI. Home shows search, category links, and featured items from the API; Discover and My Lists are placeholders on `main`; the Detail page remains to be implemented, and the merged review components will be shown on it. See the [frontend README](frontend/README.md) for setup instructions and current limitations, [UNIT_TESTS.md](frontend/UNIT_TESTS.md) and [INTEGRATION_TESTS.md](frontend/INTEGRATION_TESTS.md) for testing, and the [frontend work division](frontend/InterestFinder_Frontend_Role_Division.md) for feature ownership. Third-party UI license notices are in [frontend/THIRD_PARTY_NOTICES.md](frontend/THIRD_PARTY_NOTICES.md).
+The Next.js frontend lives in [`frontend/`](frontend/README.md) and uses TypeScript, shadcn/ui, and Tailwind CSS. The current feature branch includes the Home page, Discover search/results experience, authentication pages and shared navigation, and the My Lists page. The Detail page is not yet implemented.
+
+My Lists provides a protected `/my-lists` page with Planned and Completed lists, saved-item counts, status changes, deletion, loading/error states, and a reusable Save button component. The Save button is unit-tested, but it is not yet rendered by the current Discover cards or a Detail page. Wiring it into those user-facing entry points remains an integration task.
+
+See the [frontend README](frontend/README.md) for setup, [project testing guide](docs/testing.md) for backend/frontend commands and manual My Lists checks, [frontend unit tests](frontend/UNIT_TESTS.md) and [frontend integration tests](frontend/INTEGRATION_TESTS.md) for frontend testing details, and the [frontend work division](frontend/InterestFinder_Frontend_Role_Division.md) for feature ownership. My Lists implementation details are documented in [docs/my-lists-implementation.md](docs/my-lists-implementation.md), and the saved-items API contract is in [docs/saved-items-api.md](docs/saved-items-api.md). Third-party UI license notices are in [frontend/THIRD_PARTY_NOTICES.md](frontend/THIRD_PARTY_NOTICES.md).
