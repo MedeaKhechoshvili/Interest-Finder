@@ -118,7 +118,7 @@ test("missing artwork has a stable accessible fallback", async function ({
   ).toHaveAttribute("href", "/items/movies/movies-home-1");
 });
 
-test("home bookmarks prompt guests and return home after real login", async function ({
+test("home bookmarks prompt guests, then save to my lists after real login", async function ({
   page,
   request,
 }) {
@@ -153,8 +153,28 @@ test("home bookmarks prompt guests and return home after real login", async func
   await expect(emailInput).toHaveValue(email);
   await page.getByRole("button", { name: "Log In", exact: true }).click();
   await expect(page).toHaveURL("http://localhost:3001/");
-  await expect(bookmark).toBeDisabled();
   expect((await page.request.get("/api/auth/session")).status()).toBe(200);
+
+  // signed in users save through the real detail and saved-items routes
+  await expect(bookmark).toBeEnabled();
+  await expect(bookmark).toHaveAttribute("aria-pressed", "false");
+  await bookmark.click();
+  await expect(page.getByText("Added to your Planned list.")).toBeVisible();
+  await expect(bookmark).toHaveAttribute("aria-pressed", "true");
+  await expect(bookmark).toBeDisabled();
+  await expect(
+    page.getByRole("dialog", { name: "Join InterestFinder" }),
+  ).toHaveCount(0);
+
+  await page.goto("/my-lists");
+  await expect(page.getByText("The Silent Forest").first()).toBeVisible();
+
+  // a fresh visit shows the saved state from the user's list
+  await page.goto("/");
+  await expect(bookmark).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("button", { name: "Save Lost In Stone", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
 });
 
 test("home remains usable at phone and tablet widths", async function ({

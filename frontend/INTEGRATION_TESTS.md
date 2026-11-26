@@ -133,8 +133,9 @@ browser (Pixel 7), for 24 tests in total:
    (`home/home.spec.ts`).
 9. Home search and category links open Discover with `q` and `category`.
 10. A missing image shows an accessible "No image available" fallback.
-11. A guest's bookmark opens the login prompt, and after a real login the user
-    returns to Home.
+11. A guest's bookmark opens the login prompt. After a real login the user
+    returns to Home, saves the item with the bookmark, sees it in My Lists, and
+    sees the bookmark still marked as saved on the next visit.
 12. Home has no horizontal overflow at 320 px and 768 px widths.
 
 Latest local run (Windows, Node.js 26.13.1): 24 of 24 passed. The development

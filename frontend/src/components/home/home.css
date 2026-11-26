@@ -171,6 +171,27 @@
 .home-bookmark:disabled {
   cursor: not-allowed;
 }
+.home-bookmark[aria-pressed="true"],
+.home-bookmark[aria-pressed="true"]:disabled {
+  background: var(--green);
+  color: var(--cream);
+  opacity: 1;
+  cursor: default;
+}
+.home-save-message {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--green);
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
 .home-bookmark svg {
   width: 18px;
   height: 18px;

@@ -100,8 +100,10 @@ build output, caches, and private environment files out of commits.
 Home's search box and category links open `/discover?q=...` and
 `/discover?category=...`. Each card links to `/items/{category}/{external_id}`,
 the Detail route. A guest who clicks a card's bookmark sees the login prompt and
-returns to Home after logging in. For signed-in users the bookmark stays disabled
-until the shared save button from My Lists is merged.
+returns to Home after logging in. For signed-in users the bookmark saves the item
+to their Planned list, using the shared helpers in `src/lib/saved-items.ts`
+(the same ones as the Save button on Detail). Items already in the user's lists
+show a filled bookmark when Home loads.
 
 Discover and My Lists are still placeholders on `main`. Detail, discovery,
 saved-list cards, and save controls are the other feature owners' work. The review components in

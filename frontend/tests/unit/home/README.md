@@ -5,7 +5,8 @@ Owner: Medea.
 - `home-data.test.ts`: response validation, row selection, detail links, image
   URLs, rating scales, and card metadata.
 - `home-components.test.tsx`: loading, partial, empty, and error states, retry,
-  search and category links, image fallback, and the guest bookmark prompt.
+  search and category links, image fallback, the guest bookmark prompt, and
+  saving from the bookmark (success, already saved, errors, and saved state).
 
 API responses are mocked. See [the team testing guide](../../README.md) for
 commands and shared rules.
