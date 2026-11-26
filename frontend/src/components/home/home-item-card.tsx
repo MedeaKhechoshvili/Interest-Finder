@@ -15,23 +15,97 @@ import {
   getItemPath,
 } from "@/lib/home";
 import type { HomeItem } from "@/lib/home";
+import { createSavedItem, resolveCatalogItemId } from "@/lib/saved-items";
 
 interface HomeItemCardProps {
   item: HomeItem;
+  // true when the signed in user already has this item in My Lists
+  saved?: boolean;
 }
 
-function HomeBookmark(props: { title: string }) {
+interface HomeBookmarkProps {
+  item: HomeItem;
+  saved: boolean;
+}
+
+function HomeBookmark(props: HomeBookmarkProps) {
   const { requireAuth, signedIn } = useAuthPrompt();
   const hydrated = useHydrated();
   const descriptionId = useId();
+  const [savedHere, setSavedHere] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const saved = props.saved || savedHere;
+
   let description = "Log in to save items.";
   if (signedIn) {
-    description = "Saving is not available yet.";
+    description = "Save to your Planned list.";
+  }
+  if (saved) {
+    description = "Saved in My Lists.";
   }
 
-  function handleClick() {
-    // the shared save control will replace this guest prompt when it is ready
-    requireAuth("/");
+  async function handleClick() {
+    // guests see the shared login prompt and come back to home afterward
+    if (!requireAuth("/")) {
+      return;
+    }
+    if (saving || saved) {
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    try {
+      // saving needs the local catalog id, not the provider id
+      const itemId = await resolveCatalogItemId(
+        props.item.id,
+        props.item.category,
+        props.item.external_id,
+      );
+      let result = "Added to your Planned list.";
+
+      try {
+        await createSavedItem(itemId);
+      } catch (error) {
+        // the backend answers with a conflict when the item is already saved
+        if (!(error instanceof Error) || !/already saved/i.test(error.message)) {
+          throw error;
+        }
+        result = "This item is already in your list.";
+      }
+
+      setSavedHere(true);
+      setMessage(result);
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        setMessage(error.message);
+      } else {
+        setMessage("We could not save this item. Please try again.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  let pressed;
+  if (signedIn) {
+    pressed = saved;
+  }
+
+  // only signed in users can save, so guests do not get an empty status region
+  let status = null;
+  if (signedIn) {
+    let messageClass = "sr-only";
+    if (message) {
+      messageClass = "home-save-message";
+    }
+    status = (
+      <p className={messageClass} role="status">
+        {message}
+      </p>
+    );
   }
 
   return (
@@ -41,17 +115,20 @@ function HomeBookmark(props: { title: string }) {
         variant="outline"
         size="icon"
         className="home-bookmark"
-        aria-label={"Save " + props.title}
+        aria-label={"Save " + props.item.title}
         title={description}
         aria-describedby={descriptionId}
-        disabled={!hydrated || signedIn}
+        aria-pressed={pressed}
+        aria-busy={saving}
+        disabled={!hydrated || saving || saved}
         onClick={handleClick}
       >
-        <Bookmark aria-hidden="true" />
+        <Bookmark aria-hidden="true" fill={saved ? "currentColor" : "none"} />
       </Button>
       <span id={descriptionId} className="sr-only">
         {description}
       </span>
+      {status}
     </>
   );
 }
@@ -135,7 +212,7 @@ export default function HomeItemCard(props: HomeItemCardProps) {
         <Link href={path} aria-label={"View details for " + item.title}>
           {artwork}
         </Link>
-        <HomeBookmark title={item.title} />
+        <HomeBookmark item={item} saved={props.saved === true} />
       </div>
       <div className="home-item-body">
         <div className="home-item-kicker">

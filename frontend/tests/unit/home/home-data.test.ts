@@ -60,7 +60,16 @@ describe("home response validation", function () {
     { ...movie, source_rating: "4" },
     { ...movie, community_rating: NaN },
     { ...movie, details: [] },
+    { ...movie, id: 0 },
+    { ...movie, id: 1.5 },
+    { ...movie, id: "12" },
   ];
+  it("accepts a stored item's local catalog id", function () {
+    const result = readHomeSections({
+      data: { sections: [{ ...sections[0], items: [{ ...movie, id: 12 }] }] },
+    });
+    expect(result[0].items[0].id).toBe(12);
+  });
   it.each(invalidItems)("rejects a malformed item %j", function (item) {
     expect(function () {
       readHomeSections({

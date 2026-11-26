@@ -5,15 +5,23 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthPrompt } from "@/components/auth-prompt";
 import { apiRequest } from "@/lib/api";
-import { getHomeRows, homeCategories, readHomeSections } from "@/lib/home";
+import {
+  getHomeRows,
+  getItemKey,
+  homeCategories,
+  readHomeSections,
+} from "@/lib/home";
 import type { HomeItem, HomeSection } from "@/lib/home";
+import { getSavedItems } from "@/lib/saved-items";
 import HomeItemCard from "./home-item-card";
 
 function HomeRow(props: {
   title: string;
   id: string;
   items: HomeItem[];
+  savedKeys: Set<string>;
   recommended?: boolean;
 }) {
   let desktopLink = "View All Popular";
@@ -39,9 +47,10 @@ function HomeRow(props: {
     content = (
       <ul className="home-card-grid" aria-label={props.title}>
         {props.items.map(function (item) {
+          const key = getItemKey(item);
           return (
-            <li key={item.category + ":" + item.external_id}>
-              <HomeItemCard item={item} />
+            <li key={key}>
+              <HomeItemCard item={item} saved={props.savedKeys.has(key)} />
             </li>
           );
         })}
@@ -103,9 +112,41 @@ function HomeLoading() {
 }
 
 export default function HomeCatalog() {
+  const { signedIn } = useAuthPrompt();
   const [sections, setSections] = useState<HomeSection[] | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+
+  useEffect(
+    function () {
+      if (!signedIn) {
+        return;
+      }
+      let cancelled = false;
+      async function loadSavedItems() {
+        try {
+          const savedItems = await getSavedItems();
+          const keys = new Set<string>();
+          for (const savedItem of savedItems) {
+            if (savedItem.catalog_item) {
+              keys.add(getItemKey(savedItem.catalog_item));
+            }
+          }
+          if (!cancelled) {
+            setSavedKeys(keys);
+          }
+        } catch {
+          // bookmarks still work without this list, so home keeps loading
+        }
+      }
+      loadSavedItems();
+      return function () {
+        cancelled = true;
+      };
+    },
+    [signedIn],
+  );
 
   useEffect(
     function () {
@@ -189,11 +230,13 @@ export default function HomeCatalog() {
         title="Popular Right Now"
         id="home-popular-title"
         items={rows.popular}
+        savedKeys={savedKeys}
       />
       <HomeRow
         title="Recommended for You"
         id="home-recommended-title"
         items={rows.recommended}
+        savedKeys={savedKeys}
         recommended
       />
     </div>

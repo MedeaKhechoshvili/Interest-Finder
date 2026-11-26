@@ -7,6 +7,8 @@ interface HomeItemDetails {
 }
 
 export interface HomeItem {
+  // the local catalog id, which is null until the item has been stored
+  id?: number | null;
   category: HomeCategory;
   provider: HomeProvider;
   external_id: string;
@@ -69,6 +71,15 @@ function isHomeItem(value: unknown): value is HomeItem {
     attractions: "opentripmap",
   };
   if (value.provider !== providers[value.category]) {
+    return false;
+  }
+  if (
+    value.id !== undefined &&
+    value.id !== null &&
+    (typeof value.id !== "number" ||
+      !Number.isInteger(value.id) ||
+      value.id <= 0)
+  ) {
     return false;
   }
   for (const field of ["image_url", "year_or_date"]) {
@@ -168,6 +179,11 @@ export function getCategoryLabel(category: HomeCategory) {
     }
   }
   return category;
+}
+
+// the same item can be matched across home and saved-item responses
+export function getItemKey(item: { category: string; external_id: string }) {
+  return item.category + ":" + item.external_id;
 }
 
 export function getItemPath(item: HomeItem) {
