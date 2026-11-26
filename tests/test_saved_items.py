@@ -39,6 +39,9 @@ def workflow_client(monkeypatch):
             provider=Provider.GOOGLE_BOOKS,
             external_id="workflow-test-book",
             title="Workflow Test Book",
+            description="A book used to verify the saved-items workflow.",
+            image_url="https://example.com/workflow-book.jpg",
+            year_or_date="2025",
         ))
         session.commit()
 
@@ -102,6 +105,22 @@ def test_registration_login_save_complete_review_workflow(workflow_client):
     assert saved_body["item_id"] == item_id
     assert saved_body["status"] == "planned"
     assert saved_body["completed_at"] is None
+    # The saved-items API now embeds the catalog summary, so the frontend can
+    # render a useful card without a second lookup request.
+    assert saved_body["catalog_item"] == {
+        "id": item_id,
+        "category": "books",
+        "provider": "google_books",
+        "external_id": "workflow-test-book",
+        "title": "Workflow Test Book",
+        "description": "A book used to verify the saved-items workflow.",
+        "image_url": "https://example.com/workflow-book.jpg",
+        "year_or_date": "2025",
+    }
+
+    fetched_saved = client.get("/api/v1/saved-items/", headers=headers)
+    assert fetched_saved.status_code == 200, fetched_saved.text
+    assert fetched_saved.json()[0]["catalog_item"]["title"] == "Workflow Test Book"
 
     completed = client.patch(
         f"/api/v1/saved-items/{saved_id}",
@@ -111,6 +130,8 @@ def test_registration_login_save_complete_review_workflow(workflow_client):
     assert completed.json()["id"] == saved_id
     assert completed.json()["status"] == "completed"
     assert completed.json()["completed_at"] is not None
+    assert completed.json()["catalog_item"]["id"] == item_id
+    assert completed.json()["catalog_item"]["title"] == "Workflow Test Book"
 
     saved_list = client.get(
         "/api/v1/saved-items/", params={"status": "completed"}, headers=headers,

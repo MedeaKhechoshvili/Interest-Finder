@@ -1,105 +1,109 @@
 # Frontend unit and component tests
 
-Run these commands inside `frontend/`:
+Run these commands from the `frontend/` directory in Windows PowerShell:
 
-```bash
-npm ci
-npm test
-npm run test:coverage
+```powershell
+npm.cmd ci
+npm.cmd test
+npm.cmd run test:coverage
+npm.cmd run typecheck
+npm.cmd run build
 ```
 
-These tests do not need the API server, Python, a database, or a browser
-installation. Vitest runs the tests and React Testing Library renders forms in
-jsdom. API responses, server cookies, and navigation are mocked.
+`npm.cmd ci` installs the exact dependency versions from `package-lock.json`. The unit/component suite uses Vitest and React Testing Library. It runs in jsdom and mocks API requests and browser/server integrations where appropriate, so the unit tests do not require a running FastAPI server or real provider API keys.
 
-## Coverage
+## Latest reported results
 
-The coverage command checks application TypeScript in `src`, including untested
-pages. Generated shadcn files in `src/components/ui` are excluded. Tests and
-tooling live outside `src` and are not counted as application code.
+The latest results supplied for this branch were:
 
-Statements, branches, functions, and lines each have a minimum threshold of
-50 percent. The command fails if any threshold is missed or a test fails.
+| Check | Result |
+|---|---|
+| Unit/component tests | **228 passed** |
+| Test files | **16 passed** |
+| Overall statements coverage | **81.31%** |
+| Overall branches coverage | **82.64%** |
+| Overall functions coverage | **72.30%** |
+| Overall lines coverage | **81.64%** |
+| TypeScript typecheck | Passed |
+| Production build | Passed |
 
-Latest local run (Windows, Node.js 26.13.1, npm 12.2.3), with the merged review
-components and the Home page included: 123 of 123 unit/component tests passed.
-The coverage run reported:
+The configured minimum is 50% for statements, branches, functions, and lines. All four latest coverage results exceed that minimum.
 
-| Measure    | Coverage | Threshold | Result |
-| ---------- | -------- | --------- | ------ |
-| Lines      | 73.83 percent (553/749) | 50 percent | Pass |
-| Statements | 73.86 percent (554/750) | 50 percent | Pass |
-| Branches   | 77.11 percent (374/485) | 50 percent | Pass |
-| Functions  | 57.60 percent (72/125)  | 50 percent | Pass |
+The My Lists tests account for **37 tests** across the three files listed below. These results describe the run reported for this branch; rerun the commands above after changing code or merging additional changes.
 
-`npm run test:coverage` passes. Before the Home tests were added, function
-coverage was 44.21 percent and the command failed.
+## My Lists unit/component tests
 
-Most of the remaining untested functions are in:
+The feature tests are in `tests/unit/saved-items/`:
 
-- `src/components/reviews/`: merged review components with no unit tests yet,
-  and not used on a page until Detail exists (Yousuf for review tests, Bishal for
-  the Detail page).
-- `src/components/header.tsx`, `src/components/footer.tsx`, `src/app/layout.tsx`,
-  and the login, register, account, and My Lists pages (Medea).
-- Placeholder pages that each feature owner will replace (Discover: Nathan;
-  My Lists: Sivan).
+| Test file | Tests | What it checks |
+|---|---:|---|
+| `saved-items.test.ts` | 18 | Saved-items API helpers, response validation, numeric local catalog ID validation, resolving a missing local ID through the detail endpoint, and using saved-record IDs for updates/deletes. |
+| `save-button.test.tsx` | 7 | Save success, missing local ID resolution, duplicate handling, request failures, parent-provided saved state, and preventing multiple submissions while a save is pending. |
+| `my-lists-client.test.tsx` | 12 | Planned and Completed lists, counts, empty states, tab selection, status changes, deletion and confirmation, retry behavior, update/delete errors, missing catalog details, and image fallback. |
 
-Keep coverage up by adding real tests for that code, not by lowering the
-thresholds or excluding application files.
+Run only these tests from `frontend/`:
 
-Open `coverage/index.html` for the HTML report. The console also lists untested
-lines. Reports are generated locally and ignored by Git. Coverage will change
-as the team adds features, so each owner should add tests for their code.
-
-## Test files
-
-| File                                     | Tests | What it checks                                                                                                                      |
-| ---------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/unit/shared/return-path.test.ts`  | 16    | Safe local return paths and rejection of external, malformed, repeated, and looping destinations                                    |
-| `tests/unit/shared/api.test.ts`          | 8     | Browser API requests, JSON bodies, errors, empty responses, and login redirection after expiry                                      |
-| `tests/unit/shared/backend.test.ts`      | 6     | Backend URL handling, headers, form data, error messages, origin checks, and full navigation                                        |
-| `tests/unit/auth/forms.test.tsx`         | 14    | Forms disabled until hydration, login, registration, confirmation, consent, pending requests, errors, retries, and logout           |
-| `tests/unit/auth/auth-prompt.test.tsx`   | 4     | Guest login prompt: return links, closing with the button or Escape, focus return, signed-in bypass, and unsafe return paths        |
-| `tests/unit/auth/auth-and-proxy.test.ts` | 29    | Mocked auth/proxy handlers, normalization, session verification, expiry, cookie settings, route restrictions, and upstream failures |
-| `tests/unit/home/home-data.test.ts`      | 33    | Home response validation, row selection, detail links, image URLs, rating scales, and card metadata                                 |
-| `tests/unit/home/home-components.test.tsx` | 13  | Home loading, partial, empty, and error states, retry, search and category links, image fallback, and bookmark login prompt        |
-
-`npx vitest list` shows fewer entries because it groups `.each` cases; the
-total from `npm test` is 123.
-
-The application uses a small `goToPage()` helper for full-page navigation after
-auth changes. Unit tests replace it with a spy; browser integration tests still
-exercise actual navigation. The helper preserves the existing behavior.
-
-The hydration tests render the forms as server HTML, check that the fieldset,
-inputs, and submit button are disabled, then hydrate them and check that they
-become usable.
-
-`tests/setup.ts` cleans up rendered forms and mocks after each test. It also
-provides the ResizeObserver interface needed by Radix in jsdom; actual browser
-layout and responsive behavior are checked by the integration suite.
-
-## Other commands
-
-```bash
-npm run test:watch
-npm test -- tests/unit/shared/return-path.test.ts
-npm run typecheck
+```powershell
+npm.cmd test -- tests/unit/saved-items
 ```
 
-The browser integration suite is separate:
+Important integration note: the `SaveButton` component has unit tests, but in the current source it is not yet rendered by Discover cards or a Detail page. The tests verify the component in isolation; they do not prove that a user can currently save an item from those screens. The Detail page is also not implemented in this branch snapshot.
 
-```bash
-npm run test:integration
+## Coverage report
+
+Run:
+
+```powershell
+npm.cmd run test:coverage
 ```
 
-See [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) for its server setup and browser
-installation commands. Vitest does not collect the Playwright files, and
-Playwright does not collect these unit files.
+Open `coverage/index.html` inside `frontend/` to view the detailed report. The configured coverage collection measures application TypeScript under `src/`, excluding generated UI components. Coverage output is generated locally and should not normally be committed.
 
-## Team test folders
+Latest reported coverage for the main My Lists files:
 
-See [tests/README.md](tests/README.md) for feature folders, ownership, naming,
-and commands for running one person's tests. Each member adds tests alongside
-their assigned feature work.
+| File | Statements | Branches | Functions | Lines |
+|---|---:|---:|---:|---:|
+| `src/components/my-lists-client.tsx` | 91.46% | 82.89% | 92.30% | 95.94% |
+| `src/components/save-button.tsx` | 96.42% | 92.59% | 100% | 100% |
+| `src/lib/saved-items.ts` | 100% | 100% | 100% | 100% |
+
+## Other frontend checks
+
+Typecheck:
+
+```powershell
+npm.cmd run typecheck
+```
+
+Production build:
+
+```powershell
+npm.cmd run build
+```
+
+The latest reported runs of both commands passed.
+
+The browser integration suite is separate from Vitest unit tests. To run it from `frontend/`:
+
+```powershell
+npx.cmd playwright install chromium
+npm.cmd run test:integration
+```
+
+See [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) for setup, scenarios, and troubleshooting. The integration suite was not included in the latest results listed above.
+
+## Useful test commands
+
+Run tests in watch mode:
+
+```powershell
+npm.cmd run test:watch
+```
+
+Run one test file:
+
+```powershell
+npm.cmd test -- tests/unit/saved-items/save-button.test.tsx
+```
+
+The current `package.json` does not define a `lint` script. Lint is therefore not part of the current frontend test/check commands; do not report lint as passing or include `npm.cmd run lint` in the verification steps.

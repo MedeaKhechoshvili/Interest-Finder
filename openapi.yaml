@@ -31,6 +31,7 @@ paths:
       tags:
       - saved-items
       summary: Save Item
+      description: Save an existing catalog item and return its display information.
       operationId: save_item_api_v1_saved_items__post
       security:
       - OAuth2PasswordBearer: []
@@ -82,6 +83,7 @@ paths:
       tags:
       - saved-items
       summary: Get Saved Items
+      description: Return the user's saved records, each with its catalog-item summary.
       operationId: get_saved_items_api_v1_saved_items__get
       security:
       - OAuth2PasswordBearer: []
@@ -128,6 +130,7 @@ paths:
       tags:
       - saved-items
       summary: Update Saved Item
+      description: Update status and return the updated record with catalog information.
       operationId: update_saved_item_api_v1_saved_items__saved_item_id__patch
       security:
       - OAuth2PasswordBearer: []
@@ -180,6 +183,7 @@ paths:
       tags:
       - saved-items
       summary: Delete Saved Item
+      description: Delete one saved record owned by the current user.
       operationId: delete_saved_item_api_v1_saved_items__saved_item_id__delete
       security:
       - OAuth2PasswordBearer: []
@@ -1122,6 +1126,55 @@ components:
           title: Review Text
       type: object
       title: ReviewUpdate
+    SavedCatalogItemRead:
+      properties:
+        id:
+          type: integer
+          title: Id
+        category:
+          $ref: '#/components/schemas/Category'
+        provider:
+          $ref: '#/components/schemas/Provider'
+        external_id:
+          type: string
+          title: External Id
+        title:
+          type: string
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        year_or_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Year Or Date
+      type: object
+      required:
+      - id
+      - category
+      - provider
+      - external_id
+      - title
+      - description
+      - image_url
+      - year_or_date
+      title: SavedCatalogItemRead
+      description: 'Small catalog summary embedded in every saved-item response.
+
+
+        The saved-items API used to return only ``item_id``. Including this
+
+        summary means clients can render a useful saved-item card without making
+
+        one additional catalog request per saved item.'
     SavedItemCreate:
       properties:
         item_id:
@@ -1158,6 +1211,8 @@ components:
           type: string
           format: date-time
           title: Updated At
+        catalog_item:
+          $ref: '#/components/schemas/SavedCatalogItemRead'
       type: object
       required:
       - id
@@ -1167,7 +1222,9 @@ components:
       - saved_at
       - completed_at
       - updated_at
+      - catalog_item
       title: SavedItemRead
+      description: Saved record plus the catalog information needed by My Lists.
     SavedItemStatus:
       type: string
       enum:

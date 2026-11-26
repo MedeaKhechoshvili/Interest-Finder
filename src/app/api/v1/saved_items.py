@@ -1,14 +1,15 @@
+"""Authenticated endpoints for saving and managing catalog items."""
 
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from app.core.dependencies import CurrentUser
 from app.models.catalog_item import CatalogItem
 from app.models.database import SessionDep
 from app.models.saved_item import SavedItem, Status
-from app.models.user import User
 from app.schemas.saved_item import (
     SavedItemCreate,
     SavedItemRead,
@@ -27,7 +28,9 @@ def save_item(
     data: SavedItemCreate,
     current_user: CurrentUser,
     session: SessionDep,
-):
+) -> SavedItem:
+    """Save an existing catalog item and return its display information."""
+
     catalog_item = session.get(CatalogItem, data.item_id)
 
     if catalog_item is None:
@@ -53,12 +56,15 @@ def save_item(
         user_id=current_user.id,
         item_id=data.item_id,
         status=Status.PLANNED,
+        catalog_item=catalog_item,
     )
 
     session.add(saved_item)
     session.commit()
     session.refresh(saved_item)
 
+    # The relationship is already assigned above. It remains available after
+    # refresh, so Pydantic can include catalog_item in the response.
     return saved_item
 
 
@@ -67,9 +73,13 @@ def get_saved_items(
     current_user: CurrentUser,
     session: SessionDep,
     status: SavedItemStatus | None = None,
-):
-    query = select(SavedItem).where(
-        SavedItem.user_id == current_user.id,
+) -> list[SavedItem]:
+    """Return the user's saved records, each with its catalog-item summary."""
+
+    query = (
+        select(SavedItem)
+        .options(joinedload(SavedItem.catalog_item))
+        .where(SavedItem.user_id == current_user.id)
     )
 
     if status is not None:
@@ -77,9 +87,9 @@ def get_saved_items(
             SavedItem.status == Status(status.value),
         )
 
-    return session.scalars(
-        query.order_by(SavedItem.saved_at.desc())
-    ).all()
+    return list(
+        session.scalars(query.order_by(SavedItem.saved_at.desc())).all()
+    )
 
 
 @router.patch(
@@ -91,9 +101,13 @@ def update_saved_item(
     data: SavedItemUpdate,
     current_user: CurrentUser,
     session: SessionDep,
-):
+) -> SavedItem:
+    """Update status and return the updated record with catalog information."""
+
     saved_item = session.scalar(
-        select(SavedItem).where(
+        select(SavedItem)
+        .options(joinedload(SavedItem.catalog_item))
+        .where(
             SavedItem.id == saved_item_id,
             SavedItem.user_id == current_user.id,
         )
@@ -128,7 +142,9 @@ def delete_saved_item(
     saved_item_id: int,
     current_user: CurrentUser,
     session: SessionDep,
-):
+) -> None:
+    """Delete one saved record owned by the current user."""
+
     saved_item = session.scalar(
         select(SavedItem).where(
             SavedItem.id == saved_item_id,
