@@ -4,8 +4,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+
 import { apiRequest } from "@/lib/api";
+import SaveButton from "@/components/save-button";
 import ReviewPanel from "@/components/reviews/review-panel";
+import type { CatalogCategory } from "@/lib/saved-items";
 
 import {
   Card,
@@ -16,7 +19,7 @@ import {
 
 type CatalogItem = {
   id: number | null;
-  category: string;
+  category: CatalogCategory;
   provider: string;
   external_id: string;
   title: string;
@@ -41,6 +44,7 @@ type SessionResponse = {
   } | null;
 };
 
+// Format additional item information
 function formatDetail(value: unknown): string | null {
   if (
     typeof value === "string" ||
@@ -62,27 +66,56 @@ function formatDetail(value: unknown): string | null {
   return null;
 }
 
+// Display proper provider names
+function getProviderName(provider: string): string {
+  const names: Record<string, string> = {
+    musicbrainz: "MusicBrainz",
+    tmdb: "TMDB",
+    google_books: "Google Books",
+    opentripmap: "OpenTripMap",
+  };
+
+  return names[provider] ?? provider;
+}
+
+// Format ratings to two decimal places
+function formatRating(
+  rating: number | null,
+  provider: string
+): string {
+  if (rating === null) {
+    return "Not rated";
+  }
+
+  const value = rating.toFixed(2);
+
+  if (provider === "tmdb") {
+    return `${value}/10`;
+  }
+
+  return value;
+}
+
 export default function ItemDetailPage() {
   const params = useParams<{
     category: string;
     externalId: string;
   }>();
 
-  // Item details
-  const [item, setItem] = useState<CatalogItem | null>(
-    null
-  );
+  // Item information
+  const [item, setItem] = useState<CatalogItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageFailed, setImageFailed] = useState(false);
 
-  // Current user for ReviewPanel
+  // Current user information
   const [currentUserId, setCurrentUserId] = useState<
     number | null
   >(null);
+
   const [sessionLoading, setSessionLoading] = useState(true);
 
-  // Load item details from FastAPI
+  // Fetch item details from FastAPI
   useEffect(() => {
     let active = true;
 
@@ -93,13 +126,10 @@ export default function ItemDetailPage() {
       setImageFailed(false);
 
       try {
-        const category = params.category;
-        const externalId = params.externalId;
-
         const result = (await apiRequest(
           `/items/${encodeURIComponent(
-            category
-          )}/${encodeURIComponent(externalId)}`
+            params.category
+          )}/${encodeURIComponent(params.externalId)}`
         )) as ItemResponse;
 
         if (active) {
@@ -127,19 +157,16 @@ export default function ItemDetailPage() {
     };
   }, [params.category, params.externalId]);
 
-  // Check whether a user is logged in
+  // Fetch current login session
   useEffect(() => {
     let active = true;
 
     async function loadUser() {
       try {
-        const response = await fetch(
-          "/api/auth/session",
-          {
-            credentials: "same-origin",
-            cache: "no-store",
-          }
-        );
+        const response = await fetch("/api/auth/session", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
 
         if (response.status === 401) {
           if (active) setCurrentUserId(null);
@@ -191,10 +218,7 @@ export default function ItemDetailPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-3xl p-8 text-center">
-        <p
-          role="alert"
-          className="mb-4 text-red-600"
-        >
+        <p role="alert" className="mb-4 text-red-600">
           {error}
         </p>
 
@@ -205,7 +229,7 @@ export default function ItemDetailPage() {
     );
   }
 
-  // Item not found
+  // Missing item
   if (!item) {
     return (
       <main className="p-8 text-center">
@@ -214,21 +238,20 @@ export default function ItemDetailPage() {
     );
   }
 
-  // Format category-specific details
+  // Format category-specific information
   const details = Object.entries(item.details ?? {})
     .map(
       ([key, value]) =>
         [key, formatDetail(value)] as const
     )
     .filter(
-      (
-        entry
-      ): entry is readonly [string, string] =>
+      (entry): entry is readonly [string, string] =>
         entry[1] !== null
     );
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
+      {/* Back navigation */}
       <Link
         href="/discover"
         className="mb-6 inline-block underline"
@@ -236,7 +259,7 @@ export default function ItemDetailPage() {
         ← Back to Discover
       </Link>
 
-      {/* Item information */}
+      {/* Item information card */}
       <Card className="w-full min-w-0">
         <CardHeader>
           <p className="text-sm capitalize text-muted-foreground">
@@ -246,6 +269,31 @@ export default function ItemDetailPage() {
           <CardTitle className="text-3xl">
             {item.title}
           </CardTitle>
+
+          {/* Sivan's Save Button */}
+          <div
+            className="mt-4
+              [&_button]:rounded-md
+              [&_button]:bg-primary
+              [&_button]:px-4
+              [&_button]:py-2
+              [&_button]:text-primary-foreground
+              [&_button]:hover:opacity-90
+              [&_button]:disabled:opacity-60
+              [&_button]:focus-visible:outline-2
+              [&_button]:focus-visible:outline-offset-2
+              [&_button]:focus-visible:outline-ring
+              [&_p]:mt-2
+              [&_p]:text-sm
+              [&_p]:text-muted-foreground"
+          >
+            <SaveButton
+              key={`${item.category}-${item.external_id}`}
+              itemId={item.id}
+              category={item.category}
+              externalId={item.external_id}
+            />
+          </div>
         </CardHeader>
 
         <CardContent>
@@ -256,9 +304,7 @@ export default function ItemDetailPage() {
                 <img
                   src={item.image_url}
                   alt={item.title}
-                  onError={() =>
-                    setImageFailed(true)
-                  }
+                  onError={() => setImageFailed(true)}
                   className="w-full rounded-lg object-cover"
                 />
               ) : (
@@ -268,8 +314,9 @@ export default function ItemDetailPage() {
               )}
             </div>
 
-            {/* Item details */}
+            {/* Main item details */}
             <div className="space-y-5 md:col-span-2">
+              {/* Release date */}
               {item.year_or_date && (
                 <p>
                   <strong>Date:</strong>{" "}
@@ -295,40 +342,32 @@ export default function ItemDetailPage() {
                   Ratings
                 </h2>
 
-                <p>
-                  <strong>
-{item.provider === "musicbrainz"
-  ? "MusicBrainz"
-  : item.provider === "tmdb"
-  ? "TMDB"
-  : item.provider === "google_books"
-  ? "Google Books"
-  : item.provider === "opentripmap"
-  ? "OpenTripMap"
-  : item.provider} Rating:                  </strong>{" "}
-                 {item.source_rating !== null
-  ? `${item.source_rating.toFixed(2)}${item.provider === "tmdb" ? "/10" : ""}`
-  : "Not rated"}
-                </p>
+                <div className="space-y-1">
+                  <p>
+                    <strong>
+                      {getProviderName(item.provider)} Rating:
+                    </strong>{" "}
+                    {formatRating(
+                      item.source_rating,
+                      item.provider
+                    )}
+                  </p>
 
-                <p>
-                  <strong>
-                    Community Rating:
-                  </strong>{" "}
-                  {item.community_rating !== null
-                    ? `${item.community_rating}/5`
-                    : "Not rated"}
-                </p>
+                  <p>
+                    <strong>Community Rating:</strong>{" "}
+                    {item.community_rating !== null
+                      ? `${item.community_rating.toFixed(2)}/5`
+                      : "Not rated"}
+                  </p>
 
-                <p>
-                  <strong>
-                    Community Reviews:
-                  </strong>{" "}
-                  {item.community_review_count}
-                </p>
+                  <p>
+                    <strong>Community Reviews:</strong>{" "}
+                    {item.community_review_count}
+                  </p>
+                </div>
               </section>
 
-              {/* Category-specific information */}
+              {/* Additional details */}
               {details.length > 0 && (
                 <section>
                   <h2 className="mb-2 text-xl font-semibold">
@@ -336,20 +375,14 @@ export default function ItemDetailPage() {
                   </h2>
 
                   <div className="space-y-2">
-                    {details.map(
-                      ([key, value]) => (
-                        <p key={key}>
-                          <strong className="capitalize">
-                            {key.replaceAll(
-                              "_",
-                              " "
-                            )}
-                            :
-                          </strong>{" "}
-                          {value}
-                        </p>
-                      )
-                    )}
+                    {details.map(([key, value]) => (
+                      <p key={key}>
+                        <strong className="capitalize">
+                          {key.replaceAll("_", " ")}:
+                        </strong>{" "}
+                        {value}
+                      </p>
+                    ))}
                   </div>
                 </section>
               )}
@@ -358,13 +391,14 @@ export default function ItemDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Yousuf's ReviewPanel integration */}
+      {/* Yousuf's ReviewPanel */}
       <div className="mt-8">
         {item.id !== null ? (
           sessionLoading ? (
             <p>Checking login status...</p>
           ) : (
             <ReviewPanel
+              key={item.id}
               itemId={item.id}
               currentUserId={currentUserId}
             />
