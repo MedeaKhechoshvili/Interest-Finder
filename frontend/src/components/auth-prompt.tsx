@@ -13,6 +13,7 @@ import {
 import { getReturnPath } from "@/lib/return-path";
 
 interface AuthPromptContextValue {
+  signedIn: boolean;
   requireAuth: (next: string) => boolean;
 }
 
@@ -54,7 +55,9 @@ export function AuthPromptProvider(props: AuthPromptProviderProps) {
   }
 
   return (
-    <AuthPromptContext.Provider value={{ requireAuth: requireAuth }}>
+    <AuthPromptContext.Provider
+      value={{ requireAuth: requireAuth, signedIn: props.signedIn }}
+    >
       {props.children}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="auth-prompt" onCloseAutoFocus={restoreFocus}>

@@ -1,6 +1,12 @@
-import { redirect } from "next/navigation";
+import HomeHero from "@/components/home/home-hero";
+import HomeCatalog from "@/components/home/home-catalog";
+import "@/components/home/home.css";
 
-// the home page will be added by its feature owner
 export default function HomePage() {
-  redirect("/login");
+  return (
+    <main id="main" className="home-main">
+      <HomeHero />
+      <HomeCatalog />
+    </main>
+  );
 }
