@@ -54,15 +54,25 @@ Coordinate changes to shared fixtures and helpers before changing them.
 - Add assertions for success, validation, permissions, and failed requests.
 - Future-feature folders contain README plans, not passing or skipped test stubs.
 
-The existing suite has 123 unit/component cases and twelve browser scenarios run on
-desktop and mobile (24 Playwright tests). The complete account-to-review scenario is in `workflows`.
-It exercises current auth UI plus saved-item/review proxy routes. Each feature
-owner adds actual page interactions when their screens are implemented.
+All unit tests and browser tests pass, and combined coverage meets the 50 percent
+thresholds. The current numbers are in [UNIT_TESTS.md](../UNIT_TESTS.md#latest-results)
+and [INTEGRATION_TESTS.md](../INTEGRATION_TESTS.md#what-is-checked).
 
-The merged review components in `src/components/reviews/` do not have unit tests
-yet. Their review tests belong in `unit/details-reviews` (Yousuf). Combined
-coverage currently passes all 50 percent thresholds (functions 57.6 percent). See
-[UNIT_TESTS.md](../UNIT_TESTS.md#coverage).
+Current state of each feature's tests:
+
+| Feature | Unit tests | Browser tests |
+| --- | --- | --- |
+| Auth and shared (Medea) | `unit/auth`, `unit/shared` | `integration/auth`, `integration/layout` |
+| Home (Medea) | `unit/home` | `integration/home` |
+| Discover (Nathan) | `unit/discover` | Not yet (planning notes) |
+| My Lists (Sivan) | `unit/saved-items` | `integration/saved-items` |
+| Detail (Bishal) | Not yet (planning notes) | Not yet (planning notes) |
+| Reviews (Yousuf) | Not yet (planning notes) | Not yet (planning notes) |
+
+The complete account-to-review scenario is in `workflows`. It uses the real
+login and account pages, but saves, completes, and reviews through the Next.js
+API proxy. Changing it to click through Discover, Detail, and My Lists is planned
+for the final project (Yousuf coordinates it).
 
 Shared catalog fixture data for browser tests lives in `fixtures/home/`. The test
 API uses it for Home, search, and item details, so Discover and Detail tests can

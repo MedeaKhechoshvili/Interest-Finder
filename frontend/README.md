@@ -12,7 +12,8 @@ The starter's demo, online fonts, caching options, and example images were
 removed. The `server-only` dependency prevents backend helpers from being
 imported into browser code. The official shadcn CLI supplies the shared UI
 components and their Radix dependencies. ESLint, which the starter included,
-has since been removed from this frontend (see [Build and check types](#build-and-check-types)).
+is not used for now because it does not support TypeScript 7 yet (see
+[Build and check types](#build-and-check-types)).
 
 ## Versions
 
@@ -105,11 +106,35 @@ to their Planned list, using the shared helpers in `src/lib/saved-items.ts`
 (the same ones as the Save button on Detail). Items already in the user's lists
 show a filled bookmark when Home loads.
 
-Discover and My Lists are still placeholders on `main`. Detail, discovery,
-saved-list cards, and save controls are the other feature owners' work. The review components in
-`src/components/reviews/` (list, create, edit, delete) have been merged but are
-not used on a page yet, because they need the Detail page. Terms and privacy text
-are provisional project copy.
+The other pages are built by their feature owners and are all on `main`:
+
+- **Discover** (Nathan): search, category filters, category-specific filters,
+  pagination, and shared item cards. Search, category, filters, and page are kept
+  in the URL.
+- **Detail** (Bishal): `/items/{category}/{external_id}` with the item's
+  description, ratings, details, the Save button, and the review panel.
+- **My Lists** (Sivan): protected Planned and Completed lists with status
+  changes and removal, plus the shared Save button and saved-items helpers.
+- **Reviews** (Yousuf): the review panel on Detail lists reviews and lets the
+  author create, edit, and delete their own review.
+
+Terms and privacy text are provisional project copy.
+
+### Known gaps
+
+These are planned for the final project. Each one was checked in the code.
+
+| Gap | Owner |
+| --- | --- |
+| Detail's Save button starts as "Save to My Lists" even when the item is already saved | Bishal, Sivan |
+| Discover cards do not have a save button yet | Nathan |
+| My Lists titles do not link to Detail, so there is no direct way to write a review from My Lists | Sivan |
+| The review form appears before an item is completed (the backend correctly refuses the review) | Yousuf |
+| Detail's community rating and review count do not refresh after a review changes | Yousuf, Bishal |
+| The review components and the Detail page have no unit tests yet | Yousuf, Bishal |
+| The combined workflow test saves, completes, and reviews through API requests instead of clicking through the pages | Yousuf (combined workflow) |
+| A few small text colors on Home are below the WCAG AA contrast ratio (mobile "View all" links, category labels, rating numbers) | Medea |
+| Movies, books, and attractions need provider API keys; music works without one | Team decision for the final project |
 
 ### Guest login prompt
 
@@ -161,7 +186,16 @@ src/components/home/           home hero, featured rows, cards, and styles
 src/lib/home.ts                checks the home response and formats cards
 src/components/header.tsx      navigation and mobile menu
 src/components/footer.tsx      footer
-src/components/reviews/        review list and form (owned by Yousuf)
+src/app/discover/              discover page (Nathan)
+src/components/discover/       search form, results, and pagination (Nathan)
+src/components/item-card.tsx   shared item card used by discover (Nathan)
+src/lib/catalog.ts             reads discover search parameters and results (Nathan)
+src/app/items/                 detail page (Bishal)
+src/app/my-lists/              my lists page (Sivan)
+src/components/my-lists-client.tsx  planned and completed lists (Sivan)
+src/components/save-button.tsx shared save button (Sivan)
+src/lib/saved-items.ts         saved-items api helpers (Sivan)
+src/components/reviews/        review panel, list, and form (Yousuf)
 src/app/globals.css            shared colors and responsive styles
 ```
 
@@ -267,9 +301,12 @@ npm run build
 npm run start
 ```
 
-There is currently no `lint` script. ESLint, its configuration, and its packages
-were removed in the latest frontend update, so lint results cannot be reported
-until it is restored.
+There is no `lint` script for now. Next.js's ESLint setup depends on
+`typescript-eslint`, which currently supports TypeScript only up to version 6.0,
+and this project uses TypeScript 7. The team decided to keep TypeScript 7 and
+not use ESLint until `typescript-eslint` supports it. Type checking, unit tests,
+the production build, and the browser tests are run instead. Do not report lint
+results.
 
 `next dev` writes an `AGENTS.md` file in this folder with instructions for AI coding tools.
 Setting `agentRules: false` in `next.config.ts` turns this off.
@@ -285,23 +322,17 @@ npx playwright install chromium
 npm run test:integration
 ```
 
-Latest local results (Windows, Node.js 26.13.1, npm 12.2.3):
-
-| Check | Result |
-| --- | --- |
-| `npm run typecheck` | Passed |
-| `npm run build` | Passed |
-| `npm test` | 123 of 123 unit/component tests passed |
-| `npm run test:coverage` | Passed: lines 73.83%, branches 77.11%, functions 57.6% |
-| `npm run test:integration` | 24 of 24 passed (12 scenarios on desktop and mobile) |
-
-See [UNIT_TESTS.md](UNIT_TESTS.md#coverage) for the coverage details.
+All checks pass, and coverage meets the 50 percent thresholds. The exact numbers
+from the latest run are kept in one place:
+[UNIT_TESTS.md](UNIT_TESTS.md#latest-results) for unit tests and coverage, and
+[INTEGRATION_TESTS.md](INTEGRATION_TESTS.md#what-is-checked) for browser tests.
 
 Vitest uses mocked requests for unit/component tests. Playwright starts Next.js
 and the real FastAPI application on isolated test ports with a temporary database
-and generated test credentials. The authentication UI is exercised in a browser;
-saving, completion, and reviews currently use the real Next.js API proxy because
-those feature screens are not implemented yet.
+and generated test credentials. Login, registration, Home, saving from Home, and
+My Lists are exercised in the browser. The combined workflow test still saves,
+completes, and reviews an item through the Next.js API proxy instead of clicking
+through the pages (see [Known gaps](#known-gaps)).
 
 See [unit tests and coverage](UNIT_TESTS.md), [integration setup](INTEGRATION_TESTS.md),
 and [team test ownership](tests/README.md) for requirements, evidence, and commands.

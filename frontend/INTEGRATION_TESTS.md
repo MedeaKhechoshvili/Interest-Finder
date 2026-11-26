@@ -113,8 +113,8 @@ before running the integration command.
 
 ## What is checked
 
-Each of the twelve scenarios runs in a desktop browser (Desktop Chrome) and a mobile
-browser (Pixel 7), for 24 tests in total:
+Each of the sixteen scenarios runs in a desktop browser (Desktop Chrome) and a mobile
+browser (Pixel 7), for 32 tests in total:
 
 1. Registration and login through the actual frontend forms, session cookie
    protection, account reload, protected API calls, and logout
@@ -137,10 +137,20 @@ browser (Pixel 7), for 24 tests in total:
     returns to Home, saves the item with the bookmark, sees it in My Lists, and
     sees the bookmark still marked as saved on the next visit.
 12. Home has no horizontal overflow at 320 px and 768 px widths.
+13. Guests are redirected away from My Lists (`saved-items/my-lists.spec.ts`,
+    Sivan).
+14. A signed-in user sees empty Planned and Completed lists.
+15. My Lists shows a loading error and recovers when the API returns.
+16. Saved items can be completed, moved back to Planned, and removed, and stay
+    removed after a reload.
 
-Latest local run (Windows, Node.js 26.13.1): 24 of 24 passed. The development
-database was unchanged. In an earlier run, the mobile login scenarios were also
-repeated five times (`--project=mobile --repeat-each=5`) and passed 15 of 15.
+Latest local run on `main` with all features merged (Windows, Node.js 26.13.1):
+**32 of 32 passed**. The development database was unchanged. In an earlier run,
+the mobile login scenarios were also repeated five times
+(`--project=mobile --repeat-each=5`) and passed 15 of 15.
+
+Discover, Detail, and reviews do not have their own browser tests yet; their
+folders in `tests/integration/` contain planning notes (Nathan, Bishal, Yousuf).
 
 ### Catalog fixture
 
@@ -163,8 +173,44 @@ fill in forms.
 The complete workflow also saves a fixture book, marks it completed, and creates
 a review through the Next.js API proxy. Independent requests to FastAPI read
 the saved item and review back to verify persistence and the user association.
-Those screens are placeholders, so this part checks their API connection rather
-than claiming their UI is implemented.
+All of these pages now exist, but this part still uses API requests instead of
+clicking through Discover, Detail, and My Lists. Changing it to a click-through
+browser journey, while keeping the API checks, is planned for the final project
+(Yousuf coordinates the combined workflow).
+
+### Manual check with test data
+
+To browse the site yourself with the same eight test items, start the test API
+and point the frontend at it. From the repository root:
+
+```powershell
+uv run python frontend/scripts/run-test-api.py
+```
+
+In a second terminal, inside `frontend/`:
+
+```powershell
+$env:BACKEND_API_URL = "http://127.0.0.1:8001/api/v1"
+npm run dev
+```
+
+Open http://localhost:3000 and create a new account (the test database starts
+empty each time). If the test API stops right away with a `PermissionError`
+about `test.db`, another test API is probably still running on port 8001; stop
+it first.
+
+The fixture images only exist inside the automated tests, so cards show "Image
+unavailable" when you browse. To see the images locally, copy them into an
+ignored folder from the repository root:
+
+```powershell
+New-Item -ItemType Directory -Force frontend\public\__test\home-images
+Copy-Item frontend\tests\fixtures\home\images\*.webp frontend\public\__test\home-images\
+```
+
+Then add the line `/frontend/public/__test/` to `.git/info/exclude` so the copy
+is never committed. This copy is only for manual checks; the real site gets
+images from the providers.
 
 The API runs the real application, authentication, routes, and SQLAlchemy models.
 No application endpoints are mocked; only the external catalog providers are
