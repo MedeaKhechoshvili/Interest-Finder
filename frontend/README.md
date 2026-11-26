@@ -100,10 +100,17 @@ build output, caches, and private environment files out of commits.
 - A shared guest login prompt (`useAuthPrompt().requireAuth()`) for private actions.
 - A small backend proxy and browser API helper for feature pages.
 - Basic loading, error, and missing-page screens.
+- A Home page with search, category links, and two rows of featured items from
+  `GET /api/v1/home`, with loading, partial, empty, and error states.
 
-Home currently redirects to login. Discover and My Lists are placeholders, just
-like the first frontend. Detail, discovery, saved-list cards, and save controls
-are still the other feature owners' work. The review components in
+Home's search box and category links open `/discover?q=...` and
+`/discover?category=...`. Each card links to `/items/{category}/{external_id}`,
+the Detail route. A guest who clicks a card's bookmark sees the login prompt and
+returns to Home after logging in. For signed-in users the bookmark stays disabled
+until the shared save button from My Lists is merged.
+
+Discover and My Lists are still placeholders on `main`. Detail, discovery,
+saved-list cards, and save controls are the other feature owners' work. The review components in
 `src/components/reviews/` (list, create, edit, delete) have been merged but are
 not used on a page yet, because they need the Detail page. Terms and privacy text
 are provisional project copy.
@@ -153,6 +160,9 @@ src/lib/return-path.ts         keeps return paths inside this frontend
 src/lib/navigation.ts          full page navigation after auth changes
 src/lib/use-hydrated.ts        keeps forms disabled until hydration finishes
 src/components/auth-prompt.tsx shared guest login prompt
+src/app/page.tsx               home page
+src/components/home/           home hero, featured rows, cards, and styles
+src/lib/home.ts                checks the home response and formats cards
 src/components/header.tsx      navigation and mobile menu
 src/components/footer.tsx      footer
 src/components/reviews/        review list and form (owned by Yousuf)
@@ -284,13 +294,11 @@ Latest local results (Windows, Node.js 26.13.1, npm 12.2.3):
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run build` | Passed |
-| `npm test` | 77 of 77 unit/component tests passed |
-| `npm run test:coverage` | **Fails the function threshold**: functions 44.21%, required 50% |
-| `npm run test:integration` | 14 of 14 passed (7 scenarios on desktop and mobile) |
+| `npm test` | 123 of 123 unit/component tests passed |
+| `npm run test:coverage` | Passed: lines 73.83%, branches 77.11%, functions 57.6% |
+| `npm run test:integration` | 24 of 24 passed (12 scenarios on desktop and mobile) |
 
-All tests pass, but the coverage command exits with an error because function
-coverage is below 50 percent. See [UNIT_TESTS.md](UNIT_TESTS.md#coverage) for the
-numbers and what still needs tests.
+See [UNIT_TESTS.md](UNIT_TESTS.md#coverage) for the coverage details.
 
 Vitest uses mocked requests for unit/component tests. Playwright starts Next.js
 and the real FastAPI application on isolated test ports with a temporary database
