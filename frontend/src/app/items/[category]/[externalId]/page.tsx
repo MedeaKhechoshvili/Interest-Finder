@@ -8,13 +8,15 @@ import Link from "next/link";
 import { apiRequest } from "@/lib/api";
 import SaveButton from "@/components/save-button";
 import ReviewPanel from "@/components/reviews/review-panel";
-import type { CatalogCategory } from "@/lib/saved-items";
+import {
+  getSavedItems,
+  type CatalogCategory,
+} from "@/lib/saved-items";
 
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 type CatalogItem = {
@@ -39,12 +41,16 @@ type ItemResponse = {
 };
 
 type SessionResponse = {
-  user: {
-    id: number;
-  } | null;
+  user: { id: number } | null;
 };
 
-// Format additional item information
+type SavedLookup = {
+  itemKey: string;
+  userId: number;
+  isSaved: boolean;
+  error: boolean;
+};
+
 function formatDetail(value: unknown): string | null {
   if (
     typeof value === "string" ||
@@ -66,7 +72,6 @@ function formatDetail(value: unknown): string | null {
   return null;
 }
 
-// Display proper provider names
 function getProviderName(provider: string): string {
   const names: Record<string, string> = {
     musicbrainz: "MusicBrainz",
@@ -78,7 +83,6 @@ function getProviderName(provider: string): string {
   return names[provider] ?? provider;
 }
 
-// Format ratings to two decimal places
 function formatRating(
   rating: number | null,
   provider: string
@@ -93,6 +97,10 @@ function formatRating(
     return `${value}/10`;
   }
 
+  if (provider === "google_books") {
+    return `${value}/5`;
+  }
+
   return value;
 }
 
@@ -103,19 +111,24 @@ export default function ItemDetailPage() {
   }>();
 
   // Item information
-  const [item, setItem] = useState<CatalogItem | null>(null);
+  const [item, setItem] = useState<CatalogItem | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageFailed, setImageFailed] = useState(false);
 
-  // Current user information
+  // Login information
   const [currentUserId, setCurrentUserId] = useState<
     number | null
   >(null);
-
   const [sessionLoading, setSessionLoading] = useState(true);
 
-  // Fetch item details from FastAPI
+  // Current saved-item status
+  const [savedLookup, setSavedLookup] =
+    useState<SavedLookup | null>(null);
+
+  // Load item from FastAPI
   useEffect(() => {
     let active = true;
 
@@ -157,16 +170,19 @@ export default function ItemDetailPage() {
     };
   }, [params.category, params.externalId]);
 
-  // Fetch current login session
+  // Check login session
   useEffect(() => {
     let active = true;
 
     async function loadUser() {
       try {
-        const response = await fetch("/api/auth/session", {
-          credentials: "same-origin",
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "/api/auth/session",
+          {
+            credentials: "same-origin",
+            cache: "no-store",
+          }
+        );
 
         if (response.status === 401) {
           if (active) setCurrentUserId(null);
@@ -174,7 +190,7 @@ export default function ItemDetailPage() {
         }
 
         if (!response.ok) {
-          throw new Error("Could not check login session.");
+          throw new Error("Session unavailable.");
         }
 
         const result =
@@ -205,6 +221,59 @@ export default function ItemDetailPage() {
     };
   }, []);
 
+  // Check whether this item is already saved
+  useEffect(() => {
+    if (!item || sessionLoading || currentUserId === null) {
+      return;
+    }
+
+    let active = true;
+    const currentItem = item;
+    const userId = currentUserId;
+    const itemKey =
+      `${currentItem.category}:${currentItem.external_id}`;
+
+    async function checkSavedStatus() {
+      try {
+        const savedItems = await getSavedItems();
+
+        const alreadySaved = savedItems.some(
+          (saved) =>
+            (currentItem.id !== null &&
+              saved.item_id === currentItem.id) ||
+            (saved.catalog_item?.category ===
+              currentItem.category &&
+              saved.catalog_item?.external_id ===
+                currentItem.external_id)
+        );
+
+        if (active) {
+          setSavedLookup({
+            itemKey,
+            userId,
+            isSaved: alreadySaved,
+            error: false,
+          });
+        }
+      } catch {
+        if (active) {
+          setSavedLookup({
+            itemKey,
+            userId,
+            isSaved: false,
+            error: true,
+          });
+        }
+      }
+    }
+
+    checkSavedStatus();
+
+    return () => {
+      active = false;
+    };
+  }, [item, currentUserId, sessionLoading]);
+
   // Loading state
   if (loading) {
     return (
@@ -229,7 +298,6 @@ export default function ItemDetailPage() {
     );
   }
 
-  // Missing item
   if (!item) {
     return (
       <main className="p-8 text-center">
@@ -238,7 +306,6 @@ export default function ItemDetailPage() {
     );
   }
 
-  // Format category-specific information
   const details = Object.entries(item.details ?? {})
     .map(
       ([key, value]) =>
@@ -249,9 +316,38 @@ export default function ItemDetailPage() {
         entry[1] !== null
     );
 
+  const itemKey = `${item.category}:${item.external_id}`;
+
+  const savedStatusReady =
+    !sessionLoading &&
+    (currentUserId === null ||
+      (savedLookup?.itemKey === itemKey &&
+        savedLookup.userId === currentUserId));
+
+  const isSaved =
+    savedLookup?.itemKey === itemKey &&
+    savedLookup.userId === currentUserId &&
+    savedLookup.isSaved;
+
+  const savedStatusError =
+    currentUserId !== null &&
+    savedLookup?.itemKey === itemKey &&
+    savedLookup.userId === currentUserId &&
+    savedLookup.error;
+
+  function handleSavedChange(saved: boolean) {
+    if (currentUserId === null) return;
+
+    setSavedLookup({
+      itemKey,
+      userId: currentUserId,
+      isSaved: saved,
+      error: false,
+    });
+  }
+
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
-      {/* Back navigation */}
       <Link
         href="/discover"
         className="mb-6 inline-block underline"
@@ -259,18 +355,18 @@ export default function ItemDetailPage() {
         ← Back to Discover
       </Link>
 
-      {/* Item information card */}
       <Card className="w-full min-w-0">
         <CardHeader>
           <p className="text-sm capitalize text-muted-foreground">
             {item.category}
           </p>
 
-          <CardTitle className="text-3xl">
+          {/* Proper accessible page heading */}
+          <h1 className="text-3xl font-semibold tracking-tight">
             {item.title}
-          </CardTitle>
+          </h1>
 
-          {/* Sivan's Save Button */}
+          {/* Sivan's Save button */}
           <div
             className="mt-4
               [&_button]:rounded-md
@@ -287,12 +383,22 @@ export default function ItemDetailPage() {
               [&_p]:text-sm
               [&_p]:text-muted-foreground"
           >
-            <SaveButton
-              key={`${item.category}-${item.external_id}`}
-              itemId={item.id}
-              category={item.category}
-              externalId={item.external_id}
-            />
+            {!savedStatusReady ? (
+              <p>Checking saved status...</p>
+            ) : savedStatusError ? (
+              <p role="alert">
+                Could not check saved status. Refresh to retry.
+              </p>
+            ) : (
+              <SaveButton
+                key={`${itemKey}-${currentUserId ?? "guest"}`}
+                itemId={item.id}
+                category={item.category}
+                externalId={item.external_id}
+                isSaved={Boolean(isSaved)}
+                onSavedChange={handleSavedChange}
+              />
+            )}
           </div>
         </CardHeader>
 
@@ -314,9 +420,8 @@ export default function ItemDetailPage() {
               )}
             </div>
 
-            {/* Main item details */}
+            {/* Item information */}
             <div className="space-y-5 md:col-span-2">
-              {/* Release date */}
               {item.year_or_date && (
                 <p>
                   <strong>Date:</strong>{" "}
@@ -324,7 +429,6 @@ export default function ItemDetailPage() {
                 </p>
               )}
 
-              {/* Description */}
               <section>
                 <h2 className="mb-2 text-xl font-semibold">
                   Description
@@ -367,7 +471,7 @@ export default function ItemDetailPage() {
                 </div>
               </section>
 
-              {/* Additional details */}
+              {/* Additional category information */}
               {details.length > 0 && (
                 <section>
                   <h2 className="mb-2 text-xl font-semibold">
