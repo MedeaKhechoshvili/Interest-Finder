@@ -1,0 +1,180 @@
+{
+  "data": {
+    "sections": [
+      {
+        "category": "movies",
+        "title": "Trending movies",
+        "items": [
+          {
+            "id": null,
+            "category": "movies",
+            "provider": "tmdb",
+            "external_id": "movies-home-1",
+            "title": "Cure for Wellness",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/movies-1.webp",
+            "year_or_date": "2024",
+            "source_rating": 4.3,
+            "source_rating_count": 10,
+            "community_rating": 4.3,
+            "community_review_count": 10,
+            "details": {
+              "genres": [
+                "Film"
+              ]
+            }
+          },
+          {
+            "id": null,
+            "category": "movies",
+            "provider": "tmdb",
+            "external_id": "movies-home-2",
+            "title": "Midnight Express",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/movies-2.webp",
+            "year_or_date": "1978",
+            "source_rating": 4.4,
+            "source_rating_count": 10,
+            "community_rating": 4.4,
+            "community_review_count": 10,
+            "details": {
+              "genres": [
+                "Drama"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "category": "books",
+        "title": "Books to read",
+        "items": [
+          {
+            "id": null,
+            "category": "books",
+            "provider": "google_books",
+            "external_id": "books-home-1",
+            "title": "The Silent Forest",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/books-1.webp",
+            "year_or_date": null,
+            "source_rating": 4.1,
+            "source_rating_count": 10,
+            "community_rating": 4.1,
+            "community_review_count": 10,
+            "details": {
+              "categories": [
+                "Novel"
+              ]
+            }
+          },
+          {
+            "id": null,
+            "category": "books",
+            "provider": "google_books",
+            "external_id": "books-home-2",
+            "title": "Lost In Stone",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/books-2.webp",
+            "year_or_date": null,
+            "source_rating": 4.7,
+            "source_rating_count": 10,
+            "community_rating": 4.7,
+            "community_review_count": 10,
+            "details": {
+              "categories": [
+                "Anthology"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "category": "music",
+        "title": "Albums to hear",
+        "items": [
+          {
+            "id": null,
+            "category": "music",
+            "provider": "musicbrainz",
+            "external_id": "music-home-1",
+            "title": "Ethereal Echoes",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/music-1.webp",
+            "year_or_date": null,
+            "source_rating": 4.4,
+            "source_rating_count": 10,
+            "community_rating": 4.4,
+            "community_review_count": 10,
+            "details": {
+              "release_type": "LP",
+              "genres": [
+                "Ambient"
+              ]
+            }
+          },
+          {
+            "id": null,
+            "category": "music",
+            "provider": "musicbrainz",
+            "external_id": "music-home-2",
+            "title": "Symphony No. 9",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/music-2.webp",
+            "year_or_date": null,
+            "source_rating": 4.8,
+            "source_rating_count": 10,
+            "community_rating": 4.8,
+            "community_review_count": 10,
+            "details": {
+              "release_type": "Classical"
+            }
+          }
+        ]
+      },
+      {
+        "category": "attractions",
+        "title": "Places to visit",
+        "items": [
+          {
+            "id": null,
+            "category": "attractions",
+            "provider": "opentripmap",
+            "external_id": "attractions-home-1",
+            "title": "Kyoto Moss Gardens",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/attractions-1.webp",
+            "year_or_date": null,
+            "source_rating": 4.2,
+            "source_rating_count": 10,
+            "community_rating": 4.2,
+            "community_review_count": 10,
+            "details": {
+              "attraction_type": "Nature",
+              "city": "Japan"
+            }
+          },
+          {
+            "id": null,
+            "category": "attractions",
+            "provider": "opentripmap",
+            "external_id": "attractions-home-2",
+            "title": "Lofoten Archways",
+            "description": "Home integration test fixture.",
+            "image_url": "/__test/home-images/attractions-2.webp",
+            "year_or_date": null,
+            "source_rating": 4.6,
+            "source_rating_count": 10,
+            "community_rating": 4.6,
+            "community_review_count": 10,
+            "details": {
+              "attraction_type": "Coast",
+              "city": "Norway"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "request_id": "home-test-fixture"
+}

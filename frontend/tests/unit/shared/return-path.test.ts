@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import { getReturnPath } from "@/lib/return-path";
 
 describe("return navigation", function () {
+  it("allows returning to the public home page", function () {
+    expect(getReturnPath("/")).toBe("/");
+  });
   it.each([
     undefined,
     null,
@@ -15,7 +18,6 @@ describe("return navigation", function () {
     "/api/auth/logout",
     "/login",
     "/register",
-    "/",
     "/folder/../login",
   ])("rejects unsafe or looping destination %s", function (value) {
     expect(getReturnPath(value)).toBe("/account");

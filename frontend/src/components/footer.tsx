@@ -13,9 +13,13 @@ export default function Footer() {
             </span>
             <span>InterestFinder</span>
           </Link>
-          <p>
+          <p className="footer-description">
             Your calm companion for digital curation. Save, organize, and
             discover what moves you across literature, cinema, sound, and space.
+          </p>
+          <p className="home-footer-description">
+            Your calm companion for intentional discovery across stories, sound,
+            and place.
           </p>
         </div>
         <div className="footer-columns">
@@ -41,6 +45,17 @@ export default function Footer() {
           </nav>
         </div>
       </div>
+      <nav
+        className="home-footer-navigation"
+        aria-label="Home footer navigation"
+      >
+        <Link href="/discover">Discover</Link>
+        <Link href="/my-lists">My Lists</Link>
+        <Link href="/privacy">Privacy</Link>
+      </nav>
+      <p className="home-footer-copyright">
+        © {year} InterestFinder · Made for intentional exploration.
+      </p>
       <p className="copyright">
         © {year} InterestFinder Platform. Designed for intentional exploration.
       </p>

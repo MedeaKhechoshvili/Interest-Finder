@@ -113,8 +113,8 @@ before running the integration command.
 
 ## What is checked
 
-Each of the seven scenarios runs in a desktop browser (Desktop Chrome) and a mobile
-browser (Pixel 7), for 14 tests in total:
+Each of the twelve scenarios runs in a desktop browser (Desktop Chrome) and a mobile
+browser (Pixel 7), for 24 tests in total:
 
 1. Registration and login through the actual frontend forms, session cookie
    protection, account reload, protected API calls, and logout
@@ -128,10 +128,26 @@ browser (Pixel 7), for 14 tests in total:
    closes with Escape and returns focus, and its links return to the original page
    after a real login (`auth/prompt.spec.ts`).
 7. Guest navigation without My Lists links or buttons (`auth/prompt.spec.ts`).
+8. Home loads the real `/home` response through the Next.js proxy, shows eight
+   cards in two rows, links cards to Detail, loads every image, and fits the screen
+   (`home/home.spec.ts`).
+9. Home search and category links open Discover with `q` and `category`.
+10. A missing image shows an accessible "No image available" fallback.
+11. A guest's bookmark opens the login prompt, and after a real login the user
+    returns to Home.
+12. Home has no horizontal overflow at 320 px and 768 px widths.
 
-Latest local run (Windows, Node.js 26.13.1): 14 of 14 passed. The mobile login
-scenarios were then repeated five times (`--project=mobile --repeat-each=5`) and
-passed 15 of 15. The development database was unchanged.
+Latest local run (Windows, Node.js 26.13.1): 24 of 24 passed. The development
+database was unchanged. In an earlier run, the mobile login scenarios were also
+repeated five times (`--project=mobile --repeat-each=5`) and passed 15 of 15.
+
+### Catalog fixture
+
+The test API replaces the live movie, book, music, and attraction providers with
+`tests/fixtures/home/response.json`. Home, search, and item details all read
+these eight test items, so the tests need no provider keys or internet access.
+Fixture images in `tests/fixtures/home/images/` are served by the Home tests
+through Playwright's request routing. This data is only used by tests.
 
 ### Waiting for hydrated forms
 
@@ -150,9 +166,10 @@ Those screens are placeholders, so this part checks their API connection rather
 than claiming their UI is implemented.
 
 The API runs the real application, authentication, routes, and SQLAlchemy models.
-No application endpoints are mocked. A catalog book with local ID 101 is seeded
-in the temporary database so provider credentials and internet access are not
-needed. Tests do not exercise live catalog providers or PostgreSQL.
+No application endpoints are mocked; only the external catalog providers are
+replaced by the fixture described above. A catalog book with local ID 101 is
+also seeded in the temporary database for the save and review workflow. Tests do
+not exercise live catalog providers or PostgreSQL.
 
 Each run generates its own signing secret and test accounts. The temporary
 database is removed on normal shutdown. The development database and root `.env`
