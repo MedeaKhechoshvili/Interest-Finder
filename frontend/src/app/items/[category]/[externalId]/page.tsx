@@ -306,8 +306,9 @@ export default function ItemDetailPage() {
   : item.provider === "opentripmap"
   ? "OpenTripMap"
   : item.provider} Rating:                  </strong>{" "}
-                  {item.source_rating ??
-                    "Not rated"}
+                 {item.source_rating !== null
+  ? `${item.source_rating.toFixed(2)}${item.provider === "tmdb" ? "/10" : ""}`
+  : "Not rated"}
                 </p>
 
                 <p>
