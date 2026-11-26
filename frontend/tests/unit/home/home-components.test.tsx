@@ -5,6 +5,7 @@ import { it, describe, expect, vi, beforeEach } from "vitest";
 import HomeCatalog from "@/components/home/home-catalog";
 import HomeHero from "@/components/home/home-hero";
 import HomeItemCard from "@/components/home/home-item-card";
+import HomePage from "@/app/page";
 import { AuthPromptProvider } from "@/components/auth-prompt";
 import { apiRequest } from "@/lib/api";
 import { readHomeSections } from "@/lib/home";
@@ -187,6 +188,22 @@ describe("home catalog for signed in users", function () {
     expect(
       screen.getByRole("button", { name: "Save The Silent Forest" }),
     ).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+describe("home page", function () {
+  it("puts the hero and the featured rows in the main landmark", async function () {
+    vi.mocked(apiRequest).mockResolvedValue(fixture);
+    render(
+      <AuthPromptProvider signedIn={false}>
+        <HomePage />
+      </AuthPromptProvider>,
+    );
+    const main = screen.getByRole("main");
+    expect(main).toHaveAttribute("id", "main");
+    expect(screen.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(screen.getByRole("search")).toBeVisible();
+    expect(await screen.findAllByRole("article")).toHaveLength(8);
   });
 });
 
