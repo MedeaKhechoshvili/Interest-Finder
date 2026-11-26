@@ -122,12 +122,12 @@ export default function ItemDetailPage() {
     );
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto w-full max-w-5xl px-4 py-8">
       <Link href="/discover" className="mb-6 inline-block underline">
         ← Back to Discover
       </Link>
 
-      <Card>
+      <Card className="w-full min-w-0">
         <CardHeader>
           <p className="text-sm capitalize text-muted-foreground">
             {item.category}
