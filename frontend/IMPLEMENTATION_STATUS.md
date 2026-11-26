@@ -96,6 +96,16 @@ links, empty results, a provider error, and partial failure in an
 all-category search, on desktop (1280 px) and iPhone 13 sizes. This is not an
 automated integration test.
 
+> **Update after later merges:** the results above are from the Discover
+> checkpoint. Since then, ESLint was removed because it does not support
+> TypeScript 7 yet, so `npm run lint` no longer exists (see the
+> [frontend README](README.md#build-and-check-types)). The Detail page (#43) and
+> Sivan's Save button (#47) are merged, and the shared test API now serves eight
+> catalog fixture items for Home, search, and item details. Current test
+> results are in [UNIT_TESTS.md](UNIT_TESTS.md#latest-results) and
+> [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md#what-is-checked); remaining gaps are
+> in the [frontend README](README.md#known-gaps).
+
 ### Unfinished and dependencies
 
 - **Discover integration test** (`tests/integration/discover`): not written.

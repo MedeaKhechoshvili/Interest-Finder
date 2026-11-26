@@ -33,9 +33,9 @@ npm.cmd run build
 
 The Vitest configuration runs tests under `tests/unit/**/*.test.{ts,tsx}` in jsdom. API requests, server-only modules, and browser-dependent behavior are mocked where appropriate, so these tests do not require the API server.
 
-The latest reported frontend run completed **228 tests across 16 test files**. The three My Lists test files account for 37 tests. Overall coverage was 81.31% statements, 82.64% branches, 72.30% functions, and 81.64% lines. Each metric exceeds the configured 50% minimum. Typechecking and the production build also passed.
+All frontend unit tests pass, and coverage exceeds the configured 50% minimum for every metric. The three My Lists test files account for 37 tests. The current totals and coverage numbers are kept in [frontend/UNIT_TESTS.md](../frontend/UNIT_TESTS.md#latest-results). Typechecking and the production build also pass.
 
-The frontend `package.json` does not define a `lint` script. Lint is not part of the current reported checks.
+The frontend `package.json` does not define a `lint` script, because ESLint does not support TypeScript 7 yet (see the [frontend README](../frontend/README.md#build-and-check-types)). Lint is not part of the reported checks.
 
 ### My Lists test files
 
@@ -111,7 +111,7 @@ uv run python scripts/create_test_catalog_item.py
 
 The script creates or reuses a test book and prints its local numeric catalog ID. Creating the catalog item does not itself save it to a user's list.
 
-In this branch snapshot, the reusable `SaveButton` component is implemented and unit-tested, but it is not yet rendered by Discover cards or a Detail page. To seed a saved record for manual My Lists testing, use Swagger at `http://localhost:8000/docs` or an authenticated API client to call `POST /api/v1/saved-items/`, documented in [docs/saved-items-api.md](saved-items-api.md). The request body must use the numeric local catalog ID printed by the script, not the provider's external ID. Once the Save button is wired into a page, add a separate manual test for saving directly from that page.
+The reusable `SaveButton` is now shown on the Detail page, and Home's bookmark saves items with the same saved-items helpers, so you can save an item from either page and then check it in My Lists. Discover cards do not have a save button yet. You can also seed a saved record with Swagger at `http://localhost:8000/docs` or an authenticated API client by calling `POST /api/v1/saved-items/`, documented in [docs/saved-items-api.md](saved-items-api.md). The request body must use the numeric local catalog ID printed by the script, not the provider's external ID.
 
 Verify the following manually:
 

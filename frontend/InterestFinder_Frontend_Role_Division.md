@@ -212,7 +212,7 @@ For each PR, include:
 - Relevant desktop/mobile screenshots or demonstration evidence.
 - Unfinished work, known failures, and dependencies.
 
-Run type checking, linting, the production build, and relevant tests before requesting review. Do not report a passing build or a test command with zero tests as functional test coverage.
+Run type checking, the production build, and relevant tests before requesting review. Linting is not used for now, because ESLint does not support TypeScript 7 yet; do not report lint results (see the [frontend README](README.md#build-and-check-types)). Do not report a passing build or a test command with zero tests as functional test coverage.
 
 The frontend testing target is at least 50% application unit-test line coverage; preserve the coverage report and report the actual measured result. Include untested owned application files in measurement; explain reasonable exclusions.
 
