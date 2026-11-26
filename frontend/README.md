@@ -52,16 +52,10 @@ registration, and data operations need FastAPI running too.
 Open a **separate terminal in the repository root**, not in `frontend/`.
 Follow the [root README](../README.md#backend-development) for first-time backend
 installation and private environment configuration. If the backend is already
-configured, start it on Windows PowerShell with:
+configured, start it with uv (the same command on Windows, macOS, and Linux):
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir src
-```
-
-On Linux/macOS, from the same repository root:
-
-```bash
-.venv/bin/python -m uvicorn app.main:app --reload --app-dir src
+uv run uvicorn app.main:app --reload --app-dir src
 ```
 
 For a different backend address or frontend port, create `frontend/.env.local`
