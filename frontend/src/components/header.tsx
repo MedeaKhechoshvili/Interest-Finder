@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ interface HeaderProps {
 
 export default function Header(props: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   function closeMenu() {
     setMenuOpen(false);
@@ -63,8 +65,15 @@ export default function Header(props: HeaderProps) {
           <span>InterestFinder</span>
         </Link>
         <nav className="site-navigation" aria-label="Main navigation">
-          <Link href="/">Home</Link>
-          <Link href="/discover">Discover</Link>
+          <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
+            Home
+          </Link>
+          <Link
+            href="/discover"
+            aria-current={pathname === "/discover" ? "page" : undefined}
+          >
+            Discover
+          </Link>
           {listsLink}
         </nav>
         <nav className="account-navigation" aria-label="Account navigation">

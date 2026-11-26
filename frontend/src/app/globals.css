@@ -926,4 +926,10 @@ form {
     min-height: 46px;
   }
 }
+
+.site-footer .home-footer-description,
+.site-footer .home-footer-navigation,
+.site-footer .home-footer-copyright {
+  display: none;
+}
 }

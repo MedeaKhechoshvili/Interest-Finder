@@ -22,11 +22,7 @@ export function getReturnPath(value: unknown) {
     return "/account";
   }
 
-  if (
-    url.pathname === "/login" ||
-    url.pathname === "/register" ||
-    url.pathname === "/"
-  ) {
+  if (url.pathname === "/login" || url.pathname === "/register") {
     return "/account";
   }
 

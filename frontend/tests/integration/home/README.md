@@ -2,12 +2,10 @@
 
 Owner: Medea.
 
-Add .spec.ts files here as the feature is implemented.
+`home.spec.ts` loads Home from the real test API, checks the desktop and mobile
+layouts, search and category links to Discover, card links to Detail, the image
+fallback, and the guest bookmark prompt with a real login.
 
-Cover: Home content from the real API and navigation to Discover and Detail.
-
-Use the isolated test API and database. Check desktop and mobile behavior.
-Coordinate catalog fixtures with the shared API launcher when provider data is needed.
-
-This folder currently contains planning notes, not completed tests.
-See [the team testing guide](../../README.md) for commands and shared rules.
+The test API reads its catalog items from `tests/fixtures/home/response.json`.
+Fixture images are served by the test through Playwright request routing. See
+[the team testing guide](../../README.md) for commands and shared rules.

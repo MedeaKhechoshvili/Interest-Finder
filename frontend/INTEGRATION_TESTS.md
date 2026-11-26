@@ -5,25 +5,25 @@ Commands below use that location. Backend commands run from the repository root.
 
 ## One-time backend setup
 
-From the repository root, use Python 3.11 or newer:
+Install [uv](https://docs.astral.sh/uv/) first (see the
+[root README](../README.md#local-setup-with-uv)). Then, from the repository root:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+uv sync
 cp -n .env.example .env
-.venv/bin/python -c "import secrets; print(secrets.token_urlsafe(32))"
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Put the generated secret into `JWT_SECRET_KEY` in the root `.env`. Keep any
-existing configured environment file. If your backend environment is already
-installed, use it instead of creating another one.
+`uv sync` creates `.venv` with the exact package versions from `uv.lock`. Put the
+generated secret into `JWT_SECRET_KEY` in the root `.env`. Keep any existing
+configured environment file.
 
 ## Run the app normally
 
 Terminal 1, from the repository root:
 
 ```bash
-.venv/bin/python -m uvicorn app.main:app --reload --app-dir src
+uv run uvicorn app.main:app --reload --app-dir src
 ```
 
 API documentation: http://localhost:8000/docs
@@ -70,7 +70,8 @@ refuse to reuse an existing server to avoid modifying another database.
 
 The runner finds the backend repository by looking for `src/app/main.py`. Keep
 the frontend inside that repository. It detects `venv` and `.venv` Python
-executables on Linux/macOS and Windows. To select a different environment:
+executables on Linux/macOS and Windows, including the `.venv` created by
+`uv sync`. To select a different environment:
 
 ```bash
 TEST_PYTHON=/absolute/path/to/python npm run test:integration
@@ -80,19 +81,18 @@ For an already installed compatible Chromium browser, you can set
 `PLAYWRIGHT_EXECUTABLE_PATH` to its executable path. Otherwise Playwright uses
 the Chromium browser installed by the command above.
 
-On Windows PowerShell, from the repository root, create and install the backend
-environment if one is not already configured:
+On Windows PowerShell, from the repository root, install the backend
+environment if it is not already set up:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+uv sync
 ```
 
 For normal backend development, follow the root README for first-time `.env`
 configuration. To start the configured normal backend, from the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir src
+uv run uvicorn app.main:app --reload --app-dir src
 ```
 
 For Playwright checks, from the repository root:
@@ -113,8 +113,8 @@ before running the integration command.
 
 ## What is checked
 
-Each of the seven scenarios runs in a desktop browser (Desktop Chrome) and a mobile
-browser (Pixel 7), for 14 tests in total:
+Each of the twelve scenarios runs in a desktop browser (Desktop Chrome) and a mobile
+browser (Pixel 7), for 24 tests in total:
 
 1. Registration and login through the actual frontend forms, session cookie
    protection, account reload, protected API calls, and logout
@@ -128,10 +128,26 @@ browser (Pixel 7), for 14 tests in total:
    closes with Escape and returns focus, and its links return to the original page
    after a real login (`auth/prompt.spec.ts`).
 7. Guest navigation without My Lists links or buttons (`auth/prompt.spec.ts`).
+8. Home loads the real `/home` response through the Next.js proxy, shows eight
+   cards in two rows, links cards to Detail, loads every image, and fits the screen
+   (`home/home.spec.ts`).
+9. Home search and category links open Discover with `q` and `category`.
+10. A missing image shows an accessible "No image available" fallback.
+11. A guest's bookmark opens the login prompt, and after a real login the user
+    returns to Home.
+12. Home has no horizontal overflow at 320 px and 768 px widths.
 
-Latest local run (Windows, Node.js 26.13.1): 14 of 14 passed. The mobile login
-scenarios were then repeated five times (`--project=mobile --repeat-each=5`) and
-passed 15 of 15. The development database was unchanged.
+Latest local run (Windows, Node.js 26.13.1): 24 of 24 passed. The development
+database was unchanged. In an earlier run, the mobile login scenarios were also
+repeated five times (`--project=mobile --repeat-each=5`) and passed 15 of 15.
+
+### Catalog fixture
+
+The test API replaces the live movie, book, music, and attraction providers with
+`tests/fixtures/home/response.json`. Home, search, and item details all read
+these eight test items, so the tests need no provider keys or internet access.
+Fixture images in `tests/fixtures/home/images/` are served by the Home tests
+through Playwright's request routing. This data is only used by tests.
 
 ### Waiting for hydrated forms
 
@@ -150,9 +166,10 @@ Those screens are placeholders, so this part checks their API connection rather
 than claiming their UI is implemented.
 
 The API runs the real application, authentication, routes, and SQLAlchemy models.
-No application endpoints are mocked. A catalog book with local ID 101 is seeded
-in the temporary database so provider credentials and internet access are not
-needed. Tests do not exercise live catalog providers or PostgreSQL.
+No application endpoints are mocked; only the external catalog providers are
+replaced by the fixture described above. A catalog book with local ID 101 is
+also seeded in the temporary database for the save and review workflow. Tests do
+not exercise live catalog providers or PostgreSQL.
 
 Each run generates its own signing secret and test accounts. The temporary
 database is removed on normal shutdown. The development database and root `.env`
