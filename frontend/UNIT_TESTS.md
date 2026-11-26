@@ -30,18 +30,18 @@ lines. Reports are generated locally and ignored by Git.
 
 ## Latest results
 
-Latest local run on `main` after Home, Discover, Detail, My Lists, reviews, and
-Home bookmark saving were merged (Windows, Node.js 26.13.1, npm 12.2.3). These
-are the reference numbers for the frontend; other documents link here instead
-of repeating them.
+Latest local run after Home, Discover, Detail, My Lists, reviews, Home bookmark
+saving, and the layout and page tests were added (Windows, Node.js 26.13.1,
+npm 12.2.3). These are the reference numbers for the frontend; other documents
+link here instead of repeating them.
 
 | Check | Result |
 | --- | --- |
-| Unit/component tests | **238 passed** in 16 test files |
-| Statements | 77.22 percent (953/1234), threshold 50, pass |
-| Branches | 77.01 percent (660/857), threshold 50, pass |
-| Functions | 67.75 percent (145/214), threshold 50, pass |
-| Lines | 77.54 percent (946/1220), threshold 50, pass |
+| Unit/component tests | **264 passed** in 18 test files |
+| Statements | 80.87 percent (998/1234), threshold 50, pass |
+| Branches | 78.64 percent (674/857), threshold 50, pass |
+| Functions | 73.83 percent (158/214), threshold 50, pass |
+| Lines | 81.22 percent (991/1220), threshold 50, pass |
 | `npm run typecheck` | Passed |
 | `npm run build` | Passed |
 
@@ -55,9 +55,8 @@ Coverage passes overall, but these parts have no unit tests yet:
 - `src/components/reviews/`: the review panel, form, list, item, stars, and API
   helpers (Yousuf).
 - `src/app/items/[category]/[externalId]/page.tsx`: the Detail page (Bishal).
-- `src/components/header.tsx`, `src/components/footer.tsx`, `src/app/layout.tsx`,
-  and the login, register, account, and My Lists server pages (Medea; the browser
-  tests cover their behavior).
+- `src/app/my-lists/page.tsx`: the My Lists server page that checks the session
+  (Sivan; the browser tests cover its redirect).
 
 Keep coverage up by adding real tests for that code, not by lowering the
 thresholds or excluding application files.
@@ -72,8 +71,10 @@ thresholds or excluding application files.
 | Auth (Medea) | `tests/unit/auth/forms.test.tsx` | 14 | Forms disabled until hydration, login, registration, confirmation, consent, pending requests, errors, retries, and logout |
 | Auth (Medea) | `tests/unit/auth/auth-prompt.test.tsx` | 4 | Guest login prompt: return links, closing with the button or Escape, focus return, signed-in bypass, and unsafe return paths |
 | Auth (Medea) | `tests/unit/auth/auth-and-proxy.test.ts` | 29 | Mocked auth/proxy handlers, normalization, session verification, expiry, cookie settings, route restrictions, and upstream failures |
+| Auth (Medea) | `tests/unit/auth/pages.test.tsx` | 12 | Login and register pages (return page, messages, outside addresses replaced, signed-in users redirected), the account page (guest redirect, greeting, log out), and the error, not-found, loading, privacy, and terms pages |
+| Shared (Medea) | `tests/unit/shared/layout.test.tsx` | 13 | Header links for guests and signed-in users, the current-page marker, the mobile menu (open, close on a link, close with Escape), footer links and year, and the root layout for guests, signed-in users, and an unavailable account service |
 | Home (Medea) | `tests/unit/home/home-data.test.ts` | 37 | Home response validation, local catalog ids, row selection, detail links, image URLs, rating scales, and card metadata |
-| Home (Medea) | `tests/unit/home/home-components.test.tsx` | 19 | Loading, partial, empty, and error states, retry, search and category links, image fallback, the guest bookmark prompt, and saving from the bookmark |
+| Home (Medea) | `tests/unit/home/home-components.test.tsx` | 20 | The Home page landmark, loading, partial, empty, and error states, retry, search and category links, image fallback, the guest bookmark prompt, and saving from the bookmark |
 | Discover (Nathan) | `tests/unit/discover/catalog.test.ts` | 33 | Reading search, category, page, and filters from the URL; page and search limits; year validation; building URLs and detail links; rating scale labels; card subtitles |
 | Discover (Nathan) | `tests/unit/discover/discover-form.test.tsx` | 13 | Search submission, category switching, the filters for each category, year validation, clearing the search, and following URL changes |
 | Discover (Nathan) | `tests/unit/discover/discover-results.test.tsx` | 12 | Requests through the shared API helper, loading, results and summary, empty search, error with retry, late responses, and pagination |
@@ -84,7 +85,7 @@ thresholds or excluding application files.
 | My Lists (Sivan) | `tests/unit/saved-items/my-lists-client.test.tsx` | 12 | Planned and Completed lists, counts, empty states, tabs, status changes, deletion and confirmation, retry, update/delete errors, missing catalog details, and image fallback |
 
 `npx vitest list` shows fewer entries because it groups `.each` cases; the
-total from `npm test` is 238.
+total from `npm test` is 264.
 
 Coverage of the main My Lists files in the latest run: `save-button.tsx` 96.42
 percent statements and 100 percent functions; see the HTML report for the others.
