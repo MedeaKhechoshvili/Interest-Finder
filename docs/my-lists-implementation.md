@@ -1,8 +1,8 @@
 # Sivan's My Lists implementation
 
-This project includes Sivan's My Lists frontend feature and a backward-compatible
-backend response enhancement so the frontend can display actual catalog titles
-and images instead of only internal item numbers.
+This project includes the My Lists frontend feature and a backward-compatible
+backend response enhancement so the frontend can display catalog details
+instead of only internal item numbers.
 
 ## What the feature does
 
@@ -16,11 +16,11 @@ and images instead of only internal item numbers.
 
 ## Backend response enhancement
 
-The saved-items GET, POST, and PATCH endpoints now include a nested
-`catalog_item` object in each response. It contains the internal catalog ID,
-category, provider, external provider ID, title, description, image URL, and
-year/date. Existing saved-record fields remain unchanged, including `id`,
-`item_id`, `status`, and timestamps.
+The saved-items GET, POST, and PATCH endpoints include a nested `catalog_item`
+object in each response. It contains the internal catalog ID, category,
+provider, external provider ID, title, description, image URL, and year/date.
+Existing saved-record fields remain unchanged, including `id`, `item_id`,
+`status`, and timestamps.
 
 The distinction between identifiers is important:
 
@@ -40,54 +40,63 @@ reshaping it. `frontend/src/lib/saved-items.ts` defines the matching
 `SavedCatalogItem` and `SavedItem` TypeScript interfaces. The My Lists component
 reads display fields from `item.catalog_item`.
 
-The reusable Save Button still sends the internal numeric catalog ID in the
-POST body. If a caller only has a provider ID, it first calls the existing
-catalog detail endpoint to resolve the internal ID.
+The reusable Save Button sends the internal numeric catalog ID in the POST
+body. If a caller only has a provider ID, it first calls the existing catalog
+detail endpoint to resolve the internal ID. The Save Button is reusable by
+other feature pages; verify its Discover and Item Detail integrations
+separately before claiming those integrations are complete.
 
-## Files changed
+## Files in this feature
 
 - `src/app/api/v1/saved_items.py`
 - `src/app/schemas/saved_item.py`
 - `tests/test_saved_items.py`
+- `tests/test_my_lists_workflow.py`
+- `scripts/create_test_catalog_item.py`
 - `openapi.yaml`
 - `docs/saved-items-api.md`
-- `frontend/src/app/api/backend/[...path]/route.ts`
 - `frontend/src/app/my-lists/page.tsx`
 - `frontend/src/app/globals.css`
 - `frontend/src/components/my-lists-client.tsx`
 - `frontend/src/components/save-button.tsx`
 - `frontend/src/lib/saved-items.ts`
+- `frontend/tests/unit/saved-items/saved-items.test.ts`
+- `frontend/tests/unit/saved-items/save-button.test.tsx`
+- `frontend/tests/unit/saved-items/my-lists-client.test.tsx`
 
-## Running and checking the project
+## Testing
 
-Run the backend from the repository root with the project's virtual
-environment activated:
-
-```powershell
-python -m uvicorn app.main:app --reload --app-dir src
-```
-
-Run the frontend from `frontend` in a second terminal:
+Run the My Lists frontend unit/component tests from `frontend/`:
 
 ```powershell
-npm ci
-npm run dev
+npm.cmd test -- tests/unit/saved-items
 ```
 
-Run the backend test suite from the repository root:
+The three feature test files cover API helper validation and ID resolution,
+Save Button behavior, and the Planned/Completed My Lists interface, including
+loading, empty, error, status-change, and deletion behavior.
+
+Run all frontend unit/component tests and the configured coverage thresholds:
 
 ```powershell
-python -m pytest
+npm.cmd test
+npm.cmd run test:coverage
 ```
 
-Check that the checked-in OpenAPI file matches the API code:
+Run backend tests and validate the OpenAPI specification from the repository
+root:
 
 ```powershell
-python scripts/export_openapi.py --check
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe scripts/export_openapi.py --check
 ```
 
-The test and build commands must be run in the user's configured environment.
-This implementation was syntax-checked and its nested Pydantic response schema
-was validated in the build environment, but the complete pytest suite and
-Next.js build were not run here because required dependencies were unavailable
-and network package installation was not possible.
+For complete environment setup, browser integration tests, manual testing,
+and pull request checks, see the repository [testing guide](../TESTING.md).
+The broader frontend test instructions are in
+[UNIT_TESTS.md](../frontend/UNIT_TESTS.md) and
+[INTEGRATION_TESTS.md](../frontend/INTEGRATION_TESTS.md).
+
+Test results are environment-dependent. Record the actual command output from
+the current branch when preparing a pull request; do not treat a test file's
+presence or a previous run as evidence that the current version passes.
